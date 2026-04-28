@@ -24,7 +24,6 @@ function readStorage<T>(key: string, fallback: T): T {
     window.localStorage.setItem(key, JSON.stringify(fallback))
     return fallback
   }
-
   try {
     return JSON.parse(raw) as T
   } catch {
@@ -39,7 +38,6 @@ function writeStorage<T>(key: string, value: T) {
 
 async function canUseSupabase() {
   if (!supabase) return false
-
   const { error } = await supabase.from('tiara_users').select('id').limit(1)
   return !error
 }
@@ -49,7 +47,6 @@ export async function getUsers() {
     const { data } = await supabase!.from('tiara_users').select('*')
     if (data?.length) return data as UserProfile[]
   }
-
   return readStorage<UserProfile[]>(STORAGE_KEYS.users, mockUsers)
 }
 
@@ -63,7 +60,6 @@ export async function getProducts() {
     const { data } = await supabase!.from('tiara_products').select('*')
     if (data?.length) return data as Product[]
   }
-
   return readStorage<Product[]>(STORAGE_KEYS.products, mockProducts)
 }
 
@@ -72,7 +68,6 @@ export async function getBrands(): Promise<Brand[]> {
     const { data } = await supabase!.from('tiara_brands').select('id, name, slug, description, logo, "coverImage"')
     if (data?.length) return data as Brand[]
   }
-
   const products = await getProducts()
   return [...new Set(products.map((product) => product.brand))].map((name) => ({
     id: brandNameToId(name),
@@ -91,25 +86,14 @@ export async function searchBrandsAndProducts(query: string): Promise<Array<{ id
   if (await canUseSupabase()) {
     const [{ data: brands }, { data: products }] = await Promise.all([
       supabase!.from('tiara_brands').select('id, name').ilike('name', `${q}%`).limit(4),
-      supabase!
-        .from('tiara_products')
-        .select('id, name, brand')
-        .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
-        .limit(5),
+      supabase!.from('tiara_products').select('id, name, brand').or(`name.ilike.%${q}%,brand.ilike.%${q}%`).limit(5),
     ])
     const productRows = ((products ?? []) as { id: string; name: string; brand: string }[])
-    const productBrandMatches = [...new Set(productRows.map((product) => product.brand))]
+    const productBrandMatches = [...new Set(productRows.map((p) => p.brand))]
       .filter((name) => name.toLowerCase().includes(q))
       .map((name) => ({ id: brandNameToId(name), label: name, type: 'brand' as const }))
-    const brandRows = ((brands ?? []) as { id: string; name: string }[]).map((b) => ({
-      id: b.id,
-      label: b.name,
-      type: 'brand' as const,
-    }))
-    const uniqueBrands = [...brandRows, ...productBrandMatches].filter(
-      (brand, index, list) => list.findIndex((item) => item.label === brand.label) === index,
-    )
-
+    const brandRows = ((brands ?? []) as { id: string; name: string }[]).map((b) => ({ id: b.id, label: b.name, type: 'brand' as const }))
+    const uniqueBrands = [...brandRows, ...productBrandMatches].filter((b, i, list) => list.findIndex((x) => x.label === b.label) === i)
     return [
       ...uniqueBrands.slice(0, 4),
       ...productRows.map((p) => ({ id: p.id, label: p.name, sublabel: p.brand, type: 'product' as const })),
@@ -117,9 +101,7 @@ export async function searchBrandsAndProducts(query: string): Promise<Array<{ id
   }
 
   const products = readStorage<Product[]>(STORAGE_KEYS.products, mockProducts)
-  const matched = products.filter(
-    (p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q),
-  )
+  const matched = products.filter((p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q))
   const brandNames = [...new Set(matched.map((p) => p.brand))]
   return [
     ...brandNames.slice(0, 4).map((name) => ({ id: `brand-${name}`, label: name, type: 'brand' as const })),
@@ -137,7 +119,6 @@ export async function getPosts() {
     const { data } = await supabase!.from('tiara_posts').select('*').order('createdAt', { ascending: false })
     if (data?.length) return data as Post[]
   }
-
   return readStorage<Post[]>(STORAGE_KEYS.posts, mockPosts)
 }
 
@@ -153,9 +134,8 @@ export async function getComments(postId?: string) {
     const { data } = await query
     if (data) return data as Comment[]
   }
-
   const comments = readStorage<Comment[]>(STORAGE_KEYS.comments, mockComments)
-  return postId ? comments.filter((comment) => comment.postId === postId) : comments
+  return postId ? comments.filter((c) => c.postId === postId) : comments
 }
 
 export async function getCartItems() {
@@ -163,7 +143,6 @@ export async function getCartItems() {
     const { data } = await supabase!.from('tiara_cart_items').select('*').eq('userId', demoUserId)
     if (data) return data as CartItem[]
   }
-
   return readStorage<CartItem[]>(STORAGE_KEYS.cart, mockCartItems)
 }
 
@@ -171,24 +150,14 @@ export async function addToCart(productId: string) {
   const items = await getCartItems()
   const existing = items.find((item) => item.productId === productId)
   const nextItems = existing
-    ? items.map((item) =>
-        item.productId === productId ? { ...item, quantity: item.quantity + 1 } : item,
-      )
+    ? items.map((item) => item.productId === productId ? { ...item, quantity: item.quantity + 1 } : item)
     : [...items, { id: randomId('cart'), userId: demoUserId, productId, quantity: 1 }]
 
   if (await canUseSupabase()) {
     if (existing) {
-      await supabase!
-        .from('tiara_cart_items')
-        .update({ quantity: existing.quantity + 1 })
-        .eq('id', existing.id)
+      await supabase!.from('tiara_cart_items').update({ quantity: existing.quantity + 1 }).eq('id', existing.id)
     } else {
-      await supabase!.from('tiara_cart_items').insert({
-        id: randomId('cart'),
-        userId: demoUserId,
-        productId,
-        quantity: 1,
-      })
+      await supabase!.from('tiara_cart_items').insert({ id: randomId('cart'), userId: demoUserId, productId, quantity: 1 })
     }
   }
 
@@ -198,7 +167,9 @@ export async function addToCart(productId: string) {
 
 export async function updateCartItem(itemId: string, quantity: number) {
   const items = await getCartItems()
-  const nextItems = quantity <= 0 ? items.filter((item) => item.id !== itemId) : items.map((item) => (item.id === itemId ? { ...item, quantity } : item))
+  const nextItems = quantity <= 0
+    ? items.filter((item) => item.id !== itemId)
+    : items.map((item) => item.id === itemId ? { ...item, quantity } : item)
 
   if (await canUseSupabase()) {
     if (quantity <= 0) {
@@ -212,15 +183,88 @@ export async function updateCartItem(itemId: string, quantity: number) {
   return nextItems
 }
 
-export async function createPost(input: Omit<Post, 'id' | 'upvotes' | 'commentCount' | 'createdAt'>) {
-  const posts = await getPosts()
-  const nextPost: Post = {
-    ...input,
-    id: randomId('post'),
-    upvotes: 1,
-    commentCount: 0,
+export async function removeFromCart(itemId: string) {
+  return updateCartItem(itemId, 0)
+}
+
+export async function updateWalletBalance(userId: string, newBalance: number) {
+  const users = readStorage<UserProfile[]>(STORAGE_KEYS.users, mockUsers)
+  const nextUsers = users.map((u) => u.id === userId ? { ...u, walletBalance: newBalance } : u)
+
+  if (await canUseSupabase()) {
+    await supabase!.from('tiara_users').update({ walletBalance: newBalance }).eq('id', userId)
+  }
+
+  writeStorage(STORAGE_KEYS.users, nextUsers)
+  return newBalance
+}
+
+export interface PlaceOrderInput {
+  items: Array<{ productId: string; quantity: number }>
+  subtotal: number
+  tax: number
+  serviceCharge: number
+  couponApplied: boolean
+  couponDiscount: number
+  walletApplied: number
+  total: number
+  paymentMode: string
+  addressLabel: string
+}
+
+export async function placeOrder(input: PlaceOrderInput) {
+  const user = await getCurrentUser()
+  const newWalletBalance = Math.max(0, user.walletBalance - input.walletApplied)
+  await updateWalletBalance(user.id, newWalletBalance)
+
+  const orders = readStorage<OrderRecord[]>(STORAGE_KEYS.orders, mockOrders)
+  const order: OrderRecord = {
+    id: randomId('order'),
+    userId: user.id,
+    items: input.items,
+    subtotal: input.subtotal,
+    walletApplied: input.walletApplied,
+    total: input.total,
+    paymentMode: input.paymentMode,
+    addressLabel: input.addressLabel,
     createdAt: new Date().toISOString(),
   }
+
+  if (await canUseSupabase()) {
+    await supabase!.from('tiara_orders').insert(order)
+    await supabase!.from('tiara_cart_items').delete().eq('userId', user.id)
+  }
+
+  writeStorage(STORAGE_KEYS.orders, [order, ...orders])
+  writeStorage(STORAGE_KEYS.cart, [])
+  return { order, newWalletBalance }
+}
+
+export async function createOrder(input: Omit<OrderRecord, 'id' | 'createdAt'>) {
+  const orders = readStorage<OrderRecord[]>(STORAGE_KEYS.orders, mockOrders)
+  const order: OrderRecord = { ...input, id: randomId('order'), createdAt: new Date().toISOString() }
+
+  if (await canUseSupabase()) {
+    await supabase!.from('tiara_orders').insert(order)
+    await supabase!.from('tiara_cart_items').delete().eq('userId', demoUserId)
+  }
+
+  writeStorage(STORAGE_KEYS.orders, [order, ...orders])
+  writeStorage(STORAGE_KEYS.cart, [])
+  return order
+}
+
+export async function getOrders() {
+  if (await canUseSupabase()) {
+    const { data } = await supabase!.from('tiara_orders').select('*').eq('userId', demoUserId)
+    if (data) return data as OrderRecord[]
+  }
+  return readStorage<OrderRecord[]>(STORAGE_KEYS.orders, mockOrders)
+}
+
+export async function createPost(input: Omit<Post, 'id' | 'upvotes' | 'commentCount' | 'createdAt'>) {
+  const posts = await getPosts()
+  const nextPost: Post = { ...input, id: randomId('post'), upvotes: 1, commentCount: 0, createdAt: new Date().toISOString() }
   const nextPosts = [nextPost, ...posts]
 
   if (await canUseSupabase()) {
@@ -233,12 +277,7 @@ export async function createPost(input: Omit<Post, 'id' | 'upvotes' | 'commentCo
 
 export async function createComment(input: Omit<Comment, 'id' | 'createdAt' | 'upvotes'>) {
   const comments = await getComments()
-  const nextComment: Comment = {
-    ...input,
-    id: randomId('comment'),
-    createdAt: new Date().toISOString(),
-    upvotes: 0,
-  }
+  const nextComment: Comment = { ...input, id: randomId('comment'), createdAt: new Date().toISOString(), upvotes: 0 }
   const nextComments = [...comments, nextComment]
 
   if (await canUseSupabase()) {
@@ -249,77 +288,30 @@ export async function createComment(input: Omit<Comment, 'id' | 'createdAt' | 'u
       p_body: input.body,
       p_parent_id: input.parentId ?? null,
     })
-
-    if (error) {
-      throw error
-    }
-
+    if (error) throw error
     return data as Comment
   }
 
   const posts = await getPosts()
-  const nextPosts = posts.map((post) =>
-    post.id === input.postId ? { ...post, commentCount: post.commentCount + 1 } : post,
-  )
+  const nextPosts = posts.map((post) => post.id === input.postId ? { ...post, commentCount: post.commentCount + 1 } : post)
   writeStorage(STORAGE_KEYS.comments, nextComments)
   writeStorage(STORAGE_KEYS.posts, nextPosts)
   return nextComment
 }
 
-export async function upvoteComment({
-  commentId,
-  postId,
-}: {
-  commentId: string
-  postId: string
-}) {
+export async function upvoteComment({ commentId, postId }: { commentId: string; postId: string }) {
   const comments = await getComments()
   const nextComments = comments.map((comment) =>
     comment.id === commentId ? { ...comment, upvotes: comment.upvotes + 1 } : comment,
   )
-
   const target = nextComments.find((comment) => comment.id === commentId)
 
   if (await canUseSupabase()) {
-    const { data, error } = await supabase!.rpc('tiara_upvote_comment', {
-      p_comment_id: commentId,
-    })
-
-    if (error) {
-      throw error
-    }
-
+    const { data, error } = await supabase!.rpc('tiara_upvote_comment', { p_comment_id: commentId })
+    if (error) throw error
     return { ...(data as Comment), postId }
   }
 
   writeStorage(STORAGE_KEYS.comments, nextComments)
   return { ...target, postId }
-}
-
-export async function createOrder(input: Omit<OrderRecord, 'id' | 'createdAt'>) {
-  const orders = readStorage<OrderRecord[]>(STORAGE_KEYS.orders, mockOrders)
-  const order: OrderRecord = {
-    ...input,
-    id: randomId('order'),
-    createdAt: new Date().toISOString(),
-  }
-  const nextOrders = [order, ...orders]
-
-  if (await canUseSupabase()) {
-    await supabase!.from('tiara_orders').insert(order)
-    await supabase!.from('tiara_cart_items').delete().eq('userId', demoUserId)
-  }
-
-  writeStorage(STORAGE_KEYS.orders, nextOrders)
-  writeStorage(STORAGE_KEYS.cart, [])
-  return order
-}
-
-export async function getOrders() {
-  if (await canUseSupabase()) {
-    const { data } = await supabase!.from('tiara_orders').select('*').eq('userId', demoUserId)
-    if (data) return data as OrderRecord[]
-  }
-
-  return readStorage<OrderRecord[]>(STORAGE_KEYS.orders, mockOrders)
 }

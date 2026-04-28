@@ -1,6 +1,6 @@
-import { Menu, Search, Wallet } from 'lucide-react'
+import { Menu, Search, ShoppingCart, Wallet } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { useCurrentUser } from '../../hooks/useTiaraData'
+import { useCartCount, useCurrentUser } from '../../hooks/useTiaraData'
 import { formatCurrency } from '../../lib/format'
 import { BottomNav } from './BottomNav'
 import '../../styles/app.css'
@@ -9,6 +9,7 @@ export function AppShell() {
   const navigate = useNavigate()
   const location = useLocation()
   const { data: currentUser } = useCurrentUser()
+  const cartCount = useCartCount()
 
   const titleMap: Record<string, string> = {
     '/': 'Tiara',
@@ -22,8 +23,7 @@ export function AppShell() {
   }
 
   const pageTitle =
-    Object.entries(titleMap).find(([path]) => location.pathname === path)?.[1] ??
-    'Tiara'
+    Object.entries(titleMap).find(([path]) => location.pathname === path)?.[1] ?? 'Tiara'
 
   return (
     <div className="app-frame">
@@ -42,7 +42,24 @@ export function AppShell() {
             <button className="icon-button" type="button" aria-label="Search">
               <Search size={18} />
             </button>
-            <button className="wallet-pill" type="button" onClick={() => navigate('/wallet')}>
+            {/* Cart icon with badge */}
+            <button
+              className="icon-button cart-icon-button"
+              type="button"
+              aria-label="Cart"
+              onClick={() => navigate('/cart')}
+            >
+              <ShoppingCart size={18} />
+              {cartCount > 0 && (
+                <span className="cart-badge">{cartCount > 9 ? '9+' : cartCount}</span>
+              )}
+            </button>
+            {/* Wallet pill — navigates to /wallet */}
+            <button
+              className="wallet-pill"
+              type="button"
+              onClick={() => navigate('/wallet')}
+            >
               <Wallet size={16} />
               <span>{formatCurrency(currentUser?.walletBalance ?? 0)}</span>
             </button>

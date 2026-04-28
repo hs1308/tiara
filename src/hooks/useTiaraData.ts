@@ -14,37 +14,28 @@ import {
   getProductById,
   getProducts,
   getUsers,
+  placeOrder,
+  removeFromCart,
   searchBrandsAndProducts,
   upvoteComment,
   updateCartItem,
 } from '../services/api'
+import type { PlaceOrderInput } from '../services/api'
 
 export function useCurrentUser() {
-  return useQuery({
-    queryKey: ['current-user'],
-    queryFn: getCurrentUser,
-  })
+  return useQuery({ queryKey: ['current-user'], queryFn: getCurrentUser })
 }
 
 export function useUsers() {
-  return useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
-  })
+  return useQuery({ queryKey: ['users'], queryFn: getUsers })
 }
 
 export function useProducts() {
-  return useQuery({
-    queryKey: ['products'],
-    queryFn: getProducts,
-  })
+  return useQuery({ queryKey: ['products'], queryFn: getProducts })
 }
 
 export function useBrands() {
-  return useQuery({
-    queryKey: ['brands'],
-    queryFn: getBrands,
-  })
+  return useQuery({ queryKey: ['brands'], queryFn: getBrands })
 }
 
 export function useMentionSearch(query: string | null) {
@@ -57,24 +48,15 @@ export function useMentionSearch(query: string | null) {
 }
 
 export function useProduct(productId: string) {
-  return useQuery({
-    queryKey: ['product', productId],
-    queryFn: () => getProductById(productId),
-  })
+  return useQuery({ queryKey: ['product', productId], queryFn: () => getProductById(productId) })
 }
 
 export function usePosts() {
-  return useQuery({
-    queryKey: ['posts'],
-    queryFn: getPosts,
-  })
+  return useQuery({ queryKey: ['posts'], queryFn: getPosts })
 }
 
 export function usePost(postId: string) {
-  return useQuery({
-    queryKey: ['post', postId],
-    queryFn: () => getPostById(postId),
-  })
+  return useQuery({ queryKey: ['post', postId], queryFn: () => getPostById(postId) })
 }
 
 export function useComments(postId?: string) {
@@ -85,17 +67,16 @@ export function useComments(postId?: string) {
 }
 
 export function useCart() {
-  return useQuery({
-    queryKey: ['cart'],
-    queryFn: getCartItems,
-  })
+  return useQuery({ queryKey: ['cart'], queryFn: getCartItems })
+}
+
+export function useCartCount() {
+  const { data: cartItems = [] } = useCart()
+  return cartItems.reduce((sum, item) => sum + item.quantity, 0)
 }
 
 export function useOrders() {
-  return useQuery({
-    queryKey: ['orders'],
-    queryFn: getOrders,
-  })
+  return useQuery({ queryKey: ['orders'], queryFn: getOrders })
 }
 
 export function useAddToCart() {
@@ -115,6 +96,28 @@ export function useUpdateCartItem() {
       updateCartItem(itemId, quantity),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cart'] })
+    },
+  })
+}
+
+export function useRemoveFromCart() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (itemId: string) => removeFromCart(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+    },
+  })
+}
+
+export function usePlaceOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: PlaceOrderInput) => placeOrder(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart'] })
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: ['current-user'] })
     },
   })
 }
@@ -146,36 +149,25 @@ export function useCreateComment() {
         createdAt: new Date().toISOString(),
         parentId: variables.parentId ?? null,
       }
-
       queryClient.setQueryData(['comments', variables.postId], (current: unknown) => {
         if (!Array.isArray(current)) return [optimisticComment]
         return [...current, optimisticComment]
       })
-
       queryClient.setQueryData(['post', variables.postId], (current: unknown) => {
         if (!current || typeof current !== 'object') return current
-        return {
-          ...current,
-          commentCount: Number((current as { commentCount?: number }).commentCount ?? 0) + 1,
-        }
+        return { ...current, commentCount: Number((current as { commentCount?: number }).commentCount ?? 0) + 1 }
       })
-
       return { previousComments, previousPost, optimisticId: optimisticComment.id, postId: variables.postId }
     },
     onError: (_error, variables, context) => {
-      if (context?.previousComments) {
-        queryClient.setQueryData(['comments', variables.postId], context.previousComments)
-      }
-      if (context?.previousPost) {
-        queryClient.setQueryData(['post', variables.postId], context.previousPost)
-      }
+      if (context?.previousComments) queryClient.setQueryData(['comments', variables.postId], context.previousComments)
+      if (context?.previousPost) queryClient.setQueryData(['post', variables.postId], context.previousPost)
     },
     onSuccess: (comment, variables) => {
       queryClient.setQueryData(['comments', variables.postId], (current: unknown) => {
         if (!Array.isArray(current)) return [comment]
         const withoutOptimistic = current.filter(
-          (entry) =>
-            !(entry && typeof entry === 'object' && 'id' in entry && String(entry.id).startsWith('optimistic-')),
+          (entry) => !(entry && typeof entry === 'object' && 'id' in entry && String(entry.id).startsWith('optimistic-')),
         )
         const exists = withoutOptimistic.some(
           (entry) => entry && typeof entry === 'object' && 'id' in entry && entry.id === comment.id,
@@ -196,7 +188,6 @@ export function useUpvoteComment() {
     onMutate: async ({ commentId, postId }) => {
       await queryClient.cancelQueries({ queryKey: ['comments', postId] })
       const previous = queryClient.getQueryData(['comments', postId])
-
       queryClient.setQueryData(['comments', postId], (current: unknown) => {
         if (!Array.isArray(current)) return current
         return current.map((comment) =>
@@ -205,13 +196,10 @@ export function useUpvoteComment() {
             : comment,
         )
       })
-
       return { previous, postId }
     },
     onError: (_error, _variables, context) => {
-      if (context?.previous) {
-        queryClient.setQueryData(['comments', context.postId], context.previous)
-      }
+      if (context?.previous) queryClient.setQueryData(['comments', context.postId], context.previous)
     },
     onSuccess: (comment) => {
       queryClient.invalidateQueries({ queryKey: ['comments', comment?.postId ?? 'all'] })
