@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Minus, Plus, Tag, Trash2, Wallet, CheckCircle2, ShoppingBag } from 'lucide-react'
 import { useCart, useCurrentUser, usePlaceOrder, useProducts, useRemoveFromCart, useUpdateCartItem } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
@@ -12,7 +12,6 @@ const COUPON_DISCOUNT = 0.10
 const addresses = ['Home · Bandra West, Mumbai', 'Work · BKC, Mumbai', 'Parents · Pune']
 
 export function CartPage() {
-  const navigate = useNavigate()
   const { data: cartItems = [] } = useCart()
   const { data: products = [] } = useProducts()
   const { data: user } = useCurrentUser()
