@@ -1,6 +1,7 @@
 import { MessageCircle, Search, ShoppingBag, ThumbsUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { FaceScanModal } from '../components/ui/FaceScanModal'
 import { PostCard } from '../components/ui/PostCard'
 import { ProductCard } from '../components/ui/ProductCard'
 import { useAddToCart, useCurrentUser, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
@@ -114,6 +115,7 @@ function HeroProductRow({
 
 export function HomePage() {
   const navigate = useNavigate()
+  const [showFaceScan, setShowFaceScan] = useState(false)
   const { data: user } = useCurrentUser()
   const { data: users = [] } = useUsers()
   const { data: products = [] } = useProducts()
@@ -236,10 +238,21 @@ export function HomePage() {
           <span className="section-kicker">Complete your profile</span>
           <h2>Sharper skincare picks, better community context, stronger recommendations.</h2>
         </div>
-        <button type="button" className="primary-button" onClick={() => navigate('/profile')}>
-          Review profile
+        <button type="button" className="primary-button" onClick={() => setShowFaceScan(true)}>
+          Analyse Face
         </button>
       </section>
+
+      {showFaceScan && (
+        <FaceScanModal
+          onClose={() => setShowFaceScan(false)}
+          onComplete={(_results) => {
+            // Results are hardcoded in FaceScanModal — profile update is visual demo only
+            setShowFaceScan(false)
+            navigate('/profile')
+          }}
+        />
+      )}
     </div>
   )
 }

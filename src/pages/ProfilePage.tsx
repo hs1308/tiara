@@ -1,10 +1,20 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { FaceScanModal, SCAN_RESULTS } from '../components/ui/FaceScanModal'
 import { useCurrentUser, usePosts } from '../hooks/useTiaraData'
 
 export function ProfilePage() {
   const { data: user } = useCurrentUser()
   const { data: posts = [] } = usePosts()
+  const [showFaceScan, setShowFaceScan] = useState(false)
+  const [scanApplied, setScanApplied] = useState(false)
   const myPosts = posts.filter((post) => post.authorId === user?.id)
+
+  const skinType = scanApplied ? SCAN_RESULTS.skinType : user?.skinType ?? ''
+  const skinTone = scanApplied ? SCAN_RESULTS.skinTone : user?.skinTone ?? ''
+  const skinConcerns = scanApplied ? SCAN_RESULTS.skinConcerns : user?.skinConcerns ?? []
+  const hairType = scanApplied ? SCAN_RESULTS.hairType : user?.hairType ?? ''
+  const hairConcerns = scanApplied ? SCAN_RESULTS.hairConcerns : user?.hairConcerns ?? []
 
   if (!user) {
     return <div className="empty-state">Profile unavailable.</div>
@@ -14,34 +24,31 @@ export function ProfilePage() {
     <div className="page-stack">
       <section className="profile-hero">
         <img src={user.avatar} alt={user.name} className="profile-avatar" />
-        <div>
+        <div style={{ flex: 1 }}>
           <span className="section-kicker">@{user.username}</span>
           <h1>{user.name}</h1>
           <p>{user.bio}</p>
         </div>
+        <button type="button" className="secondary-button" onClick={() => setShowFaceScan(true)}>
+          Analyse Face
+        </button>
       </section>
       <section className="details-grid">
         <article className="detail-card">
           <h3>Skin profile</h3>
-          <p>
-            {user.skinType} skin · {user.skinTone} tone
-          </p>
+          <p>{skinType} skin · {skinTone} tone</p>
           <div className="tag-row">
-            {user.skinConcerns.map((concern) => (
-              <span key={concern} className="tag-pill">
-                {concern}
-              </span>
+            {skinConcerns.map((concern) => (
+              <span key={concern} className="tag-pill">{concern}</span>
             ))}
           </div>
         </article>
         <article className="detail-card">
           <h3>Hair profile</h3>
-          <p>{user.hairType} hair</p>
+          <p>{hairType} hair</p>
           <div className="tag-row">
-            {user.hairConcerns.map((concern) => (
-              <span key={concern} className="tag-pill">
-                {concern}
-              </span>
+            {hairConcerns.map((concern) => (
+              <span key={concern} className="tag-pill">{concern}</span>
             ))}
           </div>
         </article>
@@ -49,9 +56,7 @@ export function ProfilePage() {
           <h3>Badges</h3>
           <div className="tag-row">
             {user.badges.map((badge) => (
-              <span key={badge} className="tag-pill">
-                {badge}
-              </span>
+              <span key={badge} className="tag-pill">{badge}</span>
             ))}
           </div>
         </article>
@@ -73,6 +78,16 @@ export function ProfilePage() {
           ))}
         </div>
       </section>
+
+      {showFaceScan && (
+        <FaceScanModal
+          onClose={() => setShowFaceScan(false)}
+          onComplete={() => {
+            setScanApplied(true)
+            setShowFaceScan(false)
+          }}
+        />
+      )}
     </div>
   )
 }
