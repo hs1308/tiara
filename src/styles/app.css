@@ -549,7 +549,9 @@
 .thread-image,
 .product-hero-image {
   width: 100%;
+  height: 340px;
   object-fit: cover;
+  object-position: center top;
 }
 
 .gallery-block {
@@ -1085,12 +1087,20 @@
 
 @media (min-width: 760px) {
   .hero-panel,
-  .product-hero,
   .checkout-grid,
   .details-grid,
-  .product-grid,
-  .snapshot-panel {
+  .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Fixed-width image column so the image never stretches wide */
+  .product-hero {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+
+  /* Always show all 3 stats side-by-side */
+  .snapshot-panel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .hero-panel {
@@ -1120,10 +1130,6 @@
   }
 
   .product-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .snapshot-panel {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
@@ -1603,5 +1609,29 @@
   .inline-reply-actions {
     flex-direction: column-reverse;
     align-items: stretch;
+  }
+
+  /* Stack "Add to cart" + "Ask the community" vertically on mobile */
+  .card-actions.split {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-actions.split > * {
+    width: 100%;
+  }
+
+  /* Snapshot stats stay readable: 3-col shrinks to 1-col on very narrow */
+  .snapshot-panel {
+    grid-template-columns: 1fr;
+  }
+
+  /* Product hero: single column on mobile */
+  .product-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .product-hero-image {
+    height: 260px;
   }
 }
