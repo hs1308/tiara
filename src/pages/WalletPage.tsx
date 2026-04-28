@@ -1,4 +1,4 @@
-import { ArrowUpRight, CreditCard, Sparkles } from 'lucide-react'
+import { ArrowUpRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCurrentUser, useOrders } from '../hooks/useTiaraData'
 import { formatCurrency, formatDate } from '../lib/format'
@@ -9,50 +9,60 @@ export function WalletPage() {
 
   return (
     <div className="page-stack">
-      <section className="wallet-hero">
-        <span className="section-kicker">Wallet</span>
-        <h1>{formatCurrency(user?.walletBalance ?? 0)}</h1>
-        <p>
-          Demo credits earned from karma and applied during checkout. The flow is intentionally
-          lightweight, but the value loop is visible.
-        </p>
+
+      {/* ── Balance + Karma row ── */}
+      <section className="section-block">
+        <div className="wallet-stats-row">
+          <div className="wallet-stat">
+            <span className="section-kicker">Wallet balance</span>
+            <strong className="wallet-stat-value">{formatCurrency(user?.walletBalance ?? 0)}</strong>
+          </div>
+          <div className="wallet-stat wallet-stat-right">
+            <span className="section-kicker">Karma points</span>
+            <strong className="wallet-stat-value">{user?.karma ?? 0}</strong>
+          </div>
+        </div>
+
+        {/* ── How it works ── */}
+        <div className="wallet-explainer">
+          <p>Each upvote on a post or comment earns you <strong>1 karma point.</strong></p>
+          <ul className="wallet-rate-list">
+            <li>First 20 karma on any post or comment → <strong>₹0.50</strong> per karma</li>
+            <li>21 – 100 karma → <strong>₹0.20</strong> per karma</li>
+            <li>100+ karma → <strong>₹0.10</strong> per karma</li>
+          </ul>
+          <p className="wallet-note">Credits never expire. Applied automatically at checkout.</p>
+        </div>
       </section>
-      <section className="details-grid">
-        <article className="detail-card">
-          <Sparkles size={18} />
-          <h3>Karma to credit</h3>
-          <p>10 karma = Rs. 1 credit. No expiry in the prototype.</p>
-        </article>
-        <article className="detail-card">
-          <CreditCard size={18} />
-          <h3>Last applied</h3>
-          <p>Used during the most recent checkout to soften price resistance.</p>
-        </article>
-      </section>
+
+      {/* ── Recent activity ── */}
       <section className="section-block section-tight">
         <div className="section-head">
           <div>
             <span className="section-kicker">Recent activity</span>
-            <h2>Credits feel tied to commerce, not hidden in a dead-end screen</h2>
+            <h2>Wallet usage</h2>
           </div>
           <Link to="/shop" className="inline-link">
-            Shop again <ArrowUpRight size={15} />
+            Shop <ArrowUpRight size={15} />
           </Link>
         </div>
         <div className="feed-stack">
           {orders.length ? (
             orders.map((order) => (
               <article className="comment-card" key={order.id}>
-                <strong>{formatCurrency(order.walletApplied)} used</strong>
-                <span className="meta-line">{formatDate(order.createdAt)}</span>
-                <p>{order.addressLabel}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '12px' }}>
+                  <strong>{formatCurrency(order.walletApplied)} used</strong>
+                  <span className="meta-line">{formatDate(order.createdAt)}</span>
+                </div>
+                <p style={{ margin: '4px 0 0', color: 'var(--muted)', fontSize: '0.88rem' }}>{order.addressLabel}</p>
               </article>
             ))
           ) : (
-            <div className="empty-state">Place an order to populate wallet activity.</div>
+            <div className="empty-state">Place an order to see wallet activity here.</div>
           )}
         </div>
       </section>
+
     </div>
   )
 }
