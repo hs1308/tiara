@@ -130,18 +130,14 @@ export function HomePage() {
   return (
     <div className="page-stack">
       <section className="hero-panel contextual-hero">
-        <div className="context-trigger">
-          <span className="hero-kicker">
-            {user ? `Hi ${user.name.split(' ')[0]} · based on your recent search` : 'Based on your recent search'}
-          </span>
-          <span className="topic-badge">
-            <Search size={13} />
-            {CONTEXTUAL_TOPIC}
-          </span>
-        </div>
-
         <div className="hero-copy">
-          <h1>You asked about {CONTEXTUAL_TOPIC}</h1>
+          <h2 className="contextual-hero-heading">
+            {user ? `Hi ${user.name.split(' ')[0]} · ` : ''}Based on your recent search{' '}
+            <span className="topic-badge">
+              <Search size={13} />
+              {CONTEXTUAL_TOPIC}
+            </span>
+          </h2>
           <p>Here&apos;s what the community says — and the products that actually helped.</p>
         </div>
 
@@ -197,8 +193,7 @@ export function HomePage() {
       <section className="section-block">
         <div className="section-head">
           <div>
-            <span className="section-kicker">The community is obsessing over</span>
-            <h2>Premium picks with social proof built in</h2>
+            <h2>The community is obsessing over</h2>
           </div>
           <Link to="/shop" className="inline-link">
             See all
@@ -218,8 +213,7 @@ export function HomePage() {
       <section className="section-block">
         <div className="section-head">
           <div>
-            <span className="section-kicker">Live discussions</span>
-            <h2>Where validation, routines, and real-world wear tests happen</h2>
+            <h2>What the community is talking about</h2>
           </div>
           <Link to="/feed" className="inline-link">
             Go to feed
