@@ -1,7 +1,7 @@
 import { mockCartItems, mockComments, demoUserId, mockOrders, mockPosts, mockProducts, mockUsers } from '../data/mockData'
 import { supabase } from '../lib/supabase'
 import { randomId } from '../lib/utils'
-import type { CartItem, Comment, OrderRecord, Post, Product, UserProfile } from '../types'
+import type { Brand, CartItem, Comment, OrderRecord, Post, Product, UserProfile } from '../types'
 
 const STORAGE_KEYS = {
   users: 'tiara_users_local',
@@ -10,6 +10,12 @@ const STORAGE_KEYS = {
   comments: 'tiara_comments_local',
   cart: 'tiara_cart_items_local',
   orders: 'tiara_orders_local',
+}
+
+const SEED_VERSION = 'v2'
+if (typeof window !== 'undefined' && localStorage.getItem('tiara_seed_version') !== SEED_VERSION) {
+  Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key))
+  localStorage.setItem('tiara_seed_version', SEED_VERSION)
 }
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -59,6 +65,40 @@ export async function getProducts() {
   }
 
   return readStorage<Product[]>(STORAGE_KEYS.products, mockProducts)
+}
+
+export async function getBrands(): Promise<Brand[]> {
+  if (await canUseSupabase()) {
+    const { data } = await supabase!.from('tiara_brands').select('id, name, slug, description, logo, "coverImage"')
+    if (data?.length) return data as Brand[]
+  }
+  return []
+}
+
+export async function searchBrandsAndProducts(query: string): Promise<Array<{ id: string; label: string; sublabel?: string; type: 'brand' | 'product' }>> {
+  const q = query.toLowerCase()
+  if (!q) return []
+
+  if (await canUseSupabase()) {
+    const [{ data: brands }, { data: products }] = await Promise.all([
+      supabase!.from('tiara_brands').select('id, name').ilike('name', `${q}%`).limit(4),
+      supabase!.from('tiara_products').select('id, name, brand').ilike('name', `${q}%`).limit(5),
+    ])
+    return [
+      ...((brands ?? []) as { id: string; name: string }[]).map((b) => ({ id: b.id, label: b.name, type: 'brand' as const })),
+      ...((products ?? []) as { id: string; name: string; brand: string }[]).map((p) => ({ id: p.id, label: p.name, sublabel: p.brand, type: 'product' as const })),
+    ]
+  }
+
+  const products = readStorage<Product[]>(STORAGE_KEYS.products, mockProducts)
+  const matched = products.filter(
+    (p) => p.name.toLowerCase().startsWith(q) || p.brand.toLowerCase().startsWith(q),
+  )
+  const brandNames = [...new Set(matched.map((p) => p.brand))]
+  return [
+    ...brandNames.slice(0, 4).map((name) => ({ id: `brand-${name}`, label: name, type: 'brand' as const })),
+    ...matched.slice(0, 5).map((p) => ({ id: p.id, label: p.name, sublabel: p.brand, type: 'product' as const })),
+  ]
 }
 
 export async function getProductById(productId: string) {
@@ -176,7 +216,19 @@ export async function createComment(input: Omit<Comment, 'id' | 'createdAt' | 'u
   const nextComments = [...comments, nextComment]
 
   if (await canUseSupabase()) {
-    await supabase!.from('tiara_comments').insert(nextComment)
+    const { data, error } = await supabase!.rpc('tiara_create_comment', {
+      p_id: nextComment.id,
+      p_post_id: input.postId,
+      p_author_id: input.authorId,
+      p_body: input.body,
+      p_parent_id: input.parentId ?? null,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    return data as Comment
   }
 
   const posts = await getPosts()
@@ -186,6 +238,36 @@ export async function createComment(input: Omit<Comment, 'id' | 'createdAt' | 'u
   writeStorage(STORAGE_KEYS.comments, nextComments)
   writeStorage(STORAGE_KEYS.posts, nextPosts)
   return nextComment
+}
+
+export async function upvoteComment({
+  commentId,
+  postId,
+}: {
+  commentId: string
+  postId: string
+}) {
+  const comments = await getComments()
+  const nextComments = comments.map((comment) =>
+    comment.id === commentId ? { ...comment, upvotes: comment.upvotes + 1 } : comment,
+  )
+
+  const target = nextComments.find((comment) => comment.id === commentId)
+
+  if (await canUseSupabase()) {
+    const { data, error } = await supabase!.rpc('tiara_upvote_comment', {
+      p_comment_id: commentId,
+    })
+
+    if (error) {
+      throw error
+    }
+
+    return { ...(data as Comment), postId }
+  }
+
+  writeStorage(STORAGE_KEYS.comments, nextComments)
+  return { ...target, postId }
 }
 
 export async function createOrder(input: Omit<OrderRecord, 'id' | 'createdAt'>) {

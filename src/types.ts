@@ -78,6 +78,7 @@ export interface Comment {
   body: string
   upvotes: number
   createdAt: string
+  parentId?: string | null
 }
 
 export interface CartItem {
@@ -85,6 +86,15 @@ export interface CartItem {
   userId: string
   productId: string
   quantity: number
+}
+
+export interface Brand {
+  id: string
+  name: string
+  slug: string
+  description: string
+  logo: string | null
+  coverImage: string | null
 }
 
 export interface OrderRecord {

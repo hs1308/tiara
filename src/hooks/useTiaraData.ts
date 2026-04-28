@@ -4,6 +4,7 @@ import {
   createComment,
   createOrder,
   createPost,
+  getBrands,
   getCartItems,
   getComments,
   getCurrentUser,
@@ -13,6 +14,8 @@ import {
   getProductById,
   getProducts,
   getUsers,
+  searchBrandsAndProducts,
+  upvoteComment,
   updateCartItem,
 } from '../services/api'
 
@@ -34,6 +37,22 @@ export function useProducts() {
   return useQuery({
     queryKey: ['products'],
     queryFn: getProducts,
+  })
+}
+
+export function useBrands() {
+  return useQuery({
+    queryKey: ['brands'],
+    queryFn: getBrands,
+  })
+}
+
+export function useMentionSearch(query: string | null) {
+  return useQuery({
+    queryKey: ['mention-search', query],
+    queryFn: () => searchBrandsAndProducts(query!),
+    enabled: query !== null && query.length >= 0,
+    staleTime: 10_000,
   })
 }
 
@@ -114,10 +133,88 @@ export function useCreateComment() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: createComment,
-    onSuccess: (_, variables) => {
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ['comments', variables.postId] })
+      const previousComments = queryClient.getQueryData(['comments', variables.postId])
+      const previousPost = queryClient.getQueryData(['post', variables.postId])
+      const optimisticComment = {
+        id: `optimistic-${Date.now()}`,
+        postId: variables.postId,
+        authorId: variables.authorId,
+        body: variables.body,
+        upvotes: 0,
+        createdAt: new Date().toISOString(),
+        parentId: variables.parentId ?? null,
+      }
+
+      queryClient.setQueryData(['comments', variables.postId], (current: unknown) => {
+        if (!Array.isArray(current)) return [optimisticComment]
+        return [...current, optimisticComment]
+      })
+
+      queryClient.setQueryData(['post', variables.postId], (current: unknown) => {
+        if (!current || typeof current !== 'object') return current
+        return {
+          ...current,
+          commentCount: Number((current as { commentCount?: number }).commentCount ?? 0) + 1,
+        }
+      })
+
+      return { previousComments, previousPost, optimisticId: optimisticComment.id, postId: variables.postId }
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previousComments) {
+        queryClient.setQueryData(['comments', variables.postId], context.previousComments)
+      }
+      if (context?.previousPost) {
+        queryClient.setQueryData(['post', variables.postId], context.previousPost)
+      }
+    },
+    onSuccess: (comment, variables) => {
+      queryClient.setQueryData(['comments', variables.postId], (current: unknown) => {
+        if (!Array.isArray(current)) return [comment]
+        const withoutOptimistic = current.filter(
+          (entry) =>
+            !(entry && typeof entry === 'object' && 'id' in entry && String(entry.id).startsWith('optimistic-')),
+        )
+        const exists = withoutOptimistic.some(
+          (entry) => entry && typeof entry === 'object' && 'id' in entry && entry.id === comment.id,
+        )
+        return exists ? withoutOptimistic : [...withoutOptimistic, comment]
+      })
       queryClient.invalidateQueries({ queryKey: ['comments', variables.postId] })
       queryClient.invalidateQueries({ queryKey: ['posts'] })
       queryClient.invalidateQueries({ queryKey: ['post', variables.postId] })
+    },
+  })
+}
+
+export function useUpvoteComment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: upvoteComment,
+    onMutate: async ({ commentId, postId }) => {
+      await queryClient.cancelQueries({ queryKey: ['comments', postId] })
+      const previous = queryClient.getQueryData(['comments', postId])
+
+      queryClient.setQueryData(['comments', postId], (current: unknown) => {
+        if (!Array.isArray(current)) return current
+        return current.map((comment) =>
+          comment && typeof comment === 'object' && 'id' in comment && comment.id === commentId
+            ? { ...comment, upvotes: Number(comment.upvotes ?? 0) + 1 }
+            : comment,
+        )
+      })
+
+      return { previous, postId }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['comments', context.postId], context.previous)
+      }
+    },
+    onSuccess: (comment) => {
+      queryClient.invalidateQueries({ queryKey: ['comments', comment?.postId ?? 'all'] })
     },
   })
 }
