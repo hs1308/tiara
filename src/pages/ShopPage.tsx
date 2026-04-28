@@ -44,7 +44,7 @@ export function ShopPage() {
           <ProductCard
             key={product.id}
             product={product}
-            onAddToCart={(productId) => addToCart.mutate(productId)}
+            onAddToCart={(productId) => addToCart.mutateAsync(productId)}
           />
         ))}
       </div>

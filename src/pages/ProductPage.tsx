@@ -1,15 +1,17 @@
 import { ArrowRight, MessageCircle, ShoppingBag } from 'lucide-react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PostCard } from '../components/ui/PostCard'
-import { useAddToCart, usePosts, useProduct, useUsers } from '../hooks/useTiaraData'
+import { useAddToCart, usePosts, useProduct, useProducts, useUsers } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
 
 export function ProductPage() {
   const { productId = '' } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { data: product } = useProduct(productId)
   const { data: posts = [] } = usePosts()
   const { data: users = [] } = useUsers()
+  const { data: allProducts = [] } = useProducts()
   const addToCart = useAddToCart()
 
   if (!product) {
@@ -17,6 +19,8 @@ export function ProductPage() {
   }
 
   const relatedPosts = posts.filter((post) => post.productId === product.id).slice(0, 3)
+  const moreFromBrand = allProducts.filter((p) => p.brand === product.brand && p.id !== product.id)
+  const similarProducts = allProducts.filter((p) => p.category === product.category && p.brand !== product.brand && p.id !== product.id)
 
   return (
     <div className="page-stack">
@@ -30,7 +34,7 @@ export function ProductPage() {
           </div>
         </div>
         <div className="product-summary">
-          <span className="section-kicker">{product.brand}</span>
+          <Link to={`/brand/${encodeURIComponent(product.brand)}`} className="section-kicker brand-link">{product.brand}</Link>
           <h1>{product.name}</h1>
           <p>{product.description}</p>
           <div className="price-stack">
@@ -54,7 +58,11 @@ export function ProductPage() {
             <button
               type="button"
               className="secondary-button"
-              onClick={() => navigate(`/create?productId=${product.id}&type=Product%20Talk`)}
+              onClick={() =>
+                navigate(`/create?productId=${product.id}&type=Product%20Talk`, {
+                  state: { backgroundLocation: location },
+                })
+              }
             >
               <MessageCircle size={15} />
               Ask the community
@@ -137,6 +145,56 @@ export function ProductPage() {
           </div>
         </div>
       </section>
+
+      {moreFromBrand.length > 0 && (
+        <section className="section-block">
+          <div className="section-head">
+            <div>
+              <span className="section-kicker">More from this brand</span>
+              <h2>Other {product.brand} products on Tiara</h2>
+            </div>
+            <Link to={`/brand/${encodeURIComponent(product.brand)}`} className="inline-link">
+              View brand <ArrowRight size={15} />
+            </Link>
+          </div>
+          <div className="product-rail">
+            {moreFromBrand.map((p) => (
+              <Link key={p.id} to={`/product/${p.id}`} className="mini-product-card">
+                <img src={p.heroImage} alt={p.name} className="mini-product-image" />
+                <div className="mini-product-info">
+                  <span className="mini-product-name">{p.name}</span>
+                  <span className="mini-product-price">{formatCurrency(p.price)}</span>
+                  <span className="mini-product-meta">★ {p.rating} · ◈ {p.communityScore}/10</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {similarProducts.length > 0 && (
+        <section className="section-block">
+          <div className="section-head">
+            <div>
+              <span className="section-kicker">Similar products</span>
+              <h2>From other brands in {product.category}</h2>
+            </div>
+          </div>
+          <div className="product-rail">
+            {similarProducts.map((p) => (
+              <Link key={p.id} to={`/product/${p.id}`} className="mini-product-card">
+                <img src={p.heroImage} alt={p.name} className="mini-product-image" />
+                <div className="mini-product-info">
+                  <span className="mini-product-name">{p.name}</span>
+                  <span className="mini-product-eyebrow">{p.brand}</span>
+                  <span className="mini-product-price">{formatCurrency(p.price)}</span>
+                  <span className="mini-product-meta">★ {p.rating} · ◈ {p.communityScore}/10</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

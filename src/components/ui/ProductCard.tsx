@@ -1,15 +1,36 @@
+import { useEffect, useState } from 'react'
 import { MessageCircle, ShoppingBag } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { formatCurrency } from '../../lib/format'
 import type { Product } from '../../types'
 
 interface ProductCardProps {
   product: Product
-  onAddToCart?: (productId: string) => void
+  onAddToCart?: (productId: string) => Promise<unknown> | void
 }
 
 export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [justAdded, setJustAdded] = useState(false)
   const discount = Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+
+  useEffect(() => {
+    if (!justAdded) return
+    const timeout = window.setTimeout(() => setJustAdded(false), 1400)
+    return () => window.clearTimeout(timeout)
+  }, [justAdded])
+
+  async function handleAdd() {
+    await onAddToCart?.(product.id)
+    setJustAdded(true)
+  }
+
+  function handleDiscuss() {
+    navigate(`/create?productId=${product.id}&type=Product%20Talk`, {
+      state: { backgroundLocation: location },
+    })
+  }
 
   return (
     <article className="product-card">
@@ -34,17 +55,13 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
         </div>
       </div>
       <div className="card-actions">
-        <button type="button" className="secondary-button">
+        <button type="button" className="secondary-button" onClick={handleDiscuss}>
           <MessageCircle size={15} />
           Discuss
         </button>
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() => onAddToCart?.(product.id)}
-        >
+        <button type="button" className="primary-button" onClick={handleAdd}>
           <ShoppingBag size={15} />
-          Add
+          {justAdded ? 'Added' : 'Add'}
         </button>
       </div>
     </article>
