@@ -1,13 +1,5 @@
-import { createContext, useContext, useState } from 'react'
-
-interface DemoAppContextValue {
-  checkoutWalletApplied: number
-  setCheckoutWalletApplied: (value: number) => void
-  selectedCategory: string
-  setSelectedCategory: (value: string) => void
-}
-
-const DemoAppContext = createContext<DemoAppContextValue | null>(null)
+import { useState } from 'react'
+import { DemoAppContext } from './useDemoApp'
 
 export function DemoAppProvider({ children }: { children: React.ReactNode }) {
   const [checkoutWalletApplied, setCheckoutWalletApplied] = useState(120)
@@ -25,13 +17,4 @@ export function DemoAppProvider({ children }: { children: React.ReactNode }) {
       {children}
     </DemoAppContext.Provider>
   )
-}
-
-export function useDemoApp() {
-  const context = useContext(DemoAppContext)
-  if (!context) {
-    throw new Error('useDemoApp must be used within DemoAppProvider')
-  }
-
-  return context
 }

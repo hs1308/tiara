@@ -13,3 +13,11 @@ export function brandNameToId(name: string): string {
     .replace(/\s+/g, '-')
     .replace(/[^a-z0-9-]/g, '')
 }
+
+export function brandSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+}

@@ -3,6 +3,19 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PostCard } from '../components/ui/PostCard'
 import { useAddToCart, usePosts, useProduct, useProducts, useUsers } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
+import type { Product } from '../types'
+
+function uniqueProducts(products: Product[]) {
+  return products.filter(
+    (product, index, list) => list.findIndex((item) => item.id === product.id) === index,
+  )
+}
+
+function fillProductRail(primary: Product[], fallback: Product[], currentProductId: string, limit = 4) {
+  return uniqueProducts([...primary, ...fallback])
+    .filter((product) => product.id !== currentProductId)
+    .slice(0, limit)
+}
 
 export function ProductPage() {
   const { productId = '' } = useParams()
@@ -19,8 +32,15 @@ export function ProductPage() {
   }
 
   const relatedPosts = posts.filter((post) => post.productId === product.id).slice(0, 3)
-  const moreFromBrand = allProducts.filter((p) => p.brand === product.brand && p.id !== product.id)
-  const similarProducts = allProducts.filter((p) => p.category === product.category && p.brand !== product.brand && p.id !== product.id)
+  const brandMatches = allProducts.filter((p) => p.brand === product.brand && p.id !== product.id)
+  const categoryMatches = allProducts.filter((p) => p.category === product.category && p.id !== product.id)
+  const otherProducts = allProducts.filter((p) => p.id !== product.id)
+  const moreFromBrand = fillProductRail(brandMatches, [...categoryMatches, ...otherProducts], product.id)
+  const similarProducts = fillProductRail(
+    categoryMatches.filter((p) => p.brand !== product.brand),
+    otherProducts,
+    product.id,
+  )
 
   return (
     <div className="page-stack">
@@ -146,12 +166,15 @@ export function ProductPage() {
         </div>
       </section>
 
-      {moreFromBrand.length > 0 && (
-        <section className="section-block">
+      <section className="section-block">
           <div className="section-head">
             <div>
               <span className="section-kicker">More from this brand</span>
-              <h2>Other {product.brand} products on Tiara</h2>
+              <h2>
+                {brandMatches.length
+                  ? `Other ${product.brand} products on Tiara`
+                  : `Products shoppers compare with ${product.brand}`}
+              </h2>
             </div>
             <Link to={`/brand/${encodeURIComponent(product.brand)}`} className="inline-link">
               View brand <ArrowRight size={15} />
@@ -168,16 +191,15 @@ export function ProductPage() {
                 </div>
               </Link>
             ))}
+            {!moreFromBrand.length ? <p className="empty-label">More products will appear here as the catalog grows.</p> : null}
           </div>
         </section>
-      )}
 
-      {similarProducts.length > 0 && (
-        <section className="section-block">
+      <section className="section-block">
           <div className="section-head">
             <div>
               <span className="section-kicker">Similar products</span>
-              <h2>From other brands in {product.category}</h2>
+              <h2>{categoryMatches.length ? `From other brands in ${product.category}` : 'More community-backed picks'}</h2>
             </div>
           </div>
           <div className="product-rail">
@@ -192,9 +214,9 @@ export function ProductPage() {
                 </div>
               </Link>
             ))}
+            {!similarProducts.length ? <p className="empty-label">Similar products will appear here as the catalog grows.</p> : null}
           </div>
         </section>
-      )}
     </div>
   )
 }

@@ -5,11 +5,49 @@ import { PostCard } from '../components/ui/PostCard'
 import { ProductCard } from '../components/ui/ProductCard'
 import { useAddToCart, useCurrentUser, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
-import type { Product } from '../types'
+import type { Post, Product } from '../types'
 
 const CONTEXTUAL_TOPIC = 'dark circles'
-const DC_PRODUCT_IDS = ['product-plum-eye-gel', 'product-ordinary-caffeine', 'product-pilgrim-eye-serum']
-const DC_POST_IDS = ['post-dc-001', 'post-dc-002', 'post-dc-003']
+const CONTEXTUAL_TERMS = [
+  'dark circle',
+  'dark circles',
+  'under eye',
+  'under-eye',
+  'caffeine',
+  'pigmentation',
+  'brightening',
+]
+
+function hasContextualMatch(values: Array<string | null | undefined>) {
+  const haystack = values.filter(Boolean).join(' ').toLowerCase()
+  return CONTEXTUAL_TERMS.some((term) => haystack.includes(term))
+}
+
+function getContextualProducts(products: Product[]) {
+  const matched = products.filter((product) =>
+    hasContextualMatch([
+      product.name,
+      product.brand,
+      product.description,
+      product.category,
+      ...product.tags,
+      ...product.suitability,
+      ...product.ingredients,
+    ]),
+  )
+
+  return (matched.length ? matched : [...products].sort((a, b) => b.discussionCount - a.discussionCount)).slice(0, 3)
+}
+
+function getContextualPosts(posts: Post[], contextualProducts: Product[]) {
+  const contextualProductIds = new Set(contextualProducts.map((product) => product.id))
+  const matched = posts.filter((post) =>
+    contextualProductIds.has(post.productId ?? '') ||
+    hasContextualMatch([post.title, post.description, post.type, post.brand, ...post.tags]),
+  )
+
+  return (matched.length ? matched : [...posts].sort((a, b) => b.commentCount - a.commentCount)).slice(0, 3)
+}
 
 function HeroProductRow({
   product,
@@ -82,10 +120,12 @@ export function HomePage() {
   const { data: posts = [] } = usePosts()
   const addToCart = useAddToCart()
 
-  const contextualProducts = products.filter((p) => DC_PRODUCT_IDS.includes(p.id))
-  const contextualPosts = posts.filter((p) => DC_POST_IDS.includes(p.id))
-  const featuredProducts = products.filter((p) => !DC_PRODUCT_IDS.includes(p.id)).slice(0, 3)
-  const livePosts = posts.filter((p) => !DC_POST_IDS.includes(p.id)).slice(0, 3)
+  const contextualProducts = getContextualProducts(products)
+  const contextualPosts = getContextualPosts(posts, contextualProducts)
+  const contextualProductIds = new Set(contextualProducts.map((product) => product.id))
+  const contextualPostIds = new Set(contextualPosts.map((post) => post.id))
+  const featuredProducts = products.filter((product) => !contextualProductIds.has(product.id)).slice(0, 3)
+  const livePosts = posts.filter((post) => !contextualPostIds.has(post.id)).slice(0, 3)
 
   return (
     <div className="page-stack">

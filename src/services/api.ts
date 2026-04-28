@@ -1,6 +1,6 @@
 import { mockCartItems, mockComments, demoUserId, mockOrders, mockPosts, mockProducts, mockUsers } from '../data/mockData'
 import { supabase } from '../lib/supabase'
-import { randomId } from '../lib/utils'
+import { brandNameToId, brandSlug, randomId } from '../lib/utils'
 import type { Brand, CartItem, Comment, OrderRecord, Post, Product, UserProfile } from '../types'
 
 const STORAGE_KEYS = {
@@ -72,7 +72,16 @@ export async function getBrands(): Promise<Brand[]> {
     const { data } = await supabase!.from('tiara_brands').select('id, name, slug, description, logo, "coverImage"')
     if (data?.length) return data as Brand[]
   }
-  return []
+
+  const products = await getProducts()
+  return [...new Set(products.map((product) => product.brand))].map((name) => ({
+    id: brandNameToId(name),
+    name,
+    slug: brandSlug(name),
+    description: '',
+    logo: null,
+    coverImage: products.find((product) => product.brand === name)?.heroImage ?? null,
+  }))
 }
 
 export async function searchBrandsAndProducts(query: string): Promise<Array<{ id: string; label: string; sublabel?: string; type: 'brand' | 'product' }>> {
@@ -82,17 +91,34 @@ export async function searchBrandsAndProducts(query: string): Promise<Array<{ id
   if (await canUseSupabase()) {
     const [{ data: brands }, { data: products }] = await Promise.all([
       supabase!.from('tiara_brands').select('id, name').ilike('name', `${q}%`).limit(4),
-      supabase!.from('tiara_products').select('id, name, brand').ilike('name', `${q}%`).limit(5),
+      supabase!
+        .from('tiara_products')
+        .select('id, name, brand')
+        .or(`name.ilike.%${q}%,brand.ilike.%${q}%`)
+        .limit(5),
     ])
+    const productRows = ((products ?? []) as { id: string; name: string; brand: string }[])
+    const productBrandMatches = [...new Set(productRows.map((product) => product.brand))]
+      .filter((name) => name.toLowerCase().includes(q))
+      .map((name) => ({ id: brandNameToId(name), label: name, type: 'brand' as const }))
+    const brandRows = ((brands ?? []) as { id: string; name: string }[]).map((b) => ({
+      id: b.id,
+      label: b.name,
+      type: 'brand' as const,
+    }))
+    const uniqueBrands = [...brandRows, ...productBrandMatches].filter(
+      (brand, index, list) => list.findIndex((item) => item.label === brand.label) === index,
+    )
+
     return [
-      ...((brands ?? []) as { id: string; name: string }[]).map((b) => ({ id: b.id, label: b.name, type: 'brand' as const })),
-      ...((products ?? []) as { id: string; name: string; brand: string }[]).map((p) => ({ id: p.id, label: p.name, sublabel: p.brand, type: 'product' as const })),
+      ...uniqueBrands.slice(0, 4),
+      ...productRows.map((p) => ({ id: p.id, label: p.name, sublabel: p.brand, type: 'product' as const })),
     ]
   }
 
   const products = readStorage<Product[]>(STORAGE_KEYS.products, mockProducts)
   const matched = products.filter(
-    (p) => p.name.toLowerCase().startsWith(q) || p.brand.toLowerCase().startsWith(q),
+    (p) => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q),
   )
   const brandNames = [...new Set(matched.map((p) => p.brand))]
   return [

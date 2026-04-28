@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { demoUserId } from '../data/mockData'
 import { useCart, useCreateOrder, useCurrentUser, useProducts } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
-import { useDemoApp } from '../state/DemoAppProvider'
+import { useDemoApp } from '../state/useDemoApp'
 
 const addresses = ['Home · Bandra West', 'Work · BKC', 'Parents · Pune']
 const paymentModes = ['UPI', 'Credit Card', 'Cash on Delivery']

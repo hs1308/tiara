@@ -60,8 +60,18 @@ interface MentionEntity {
 }
 
 function renderCommentBody(body: string, products: Product[], brands: Brand[]): ReactNode[] {
+  const productBrands = [...new Set(products.map((product) => product.brand))]
+  const brandEntities = [
+    ...brands.map((brand) => brand.name),
+    ...productBrands,
+  ].filter((name, index, list) => list.indexOf(name) === index)
+
   const entities: MentionEntity[] = [
-    ...brands.map((b) => ({ name: b.name, to: `/brand/${b.slug}`, type: 'brand' as const })),
+    ...brandEntities.map((name) => ({
+      name,
+      to: `/brand/${encodeURIComponent(name)}`,
+      type: 'brand' as const,
+    })),
     ...products.map((p) => ({ name: p.name, to: `/product/${p.id}`, type: 'product' as const })),
   ].sort((a, b) => b.name.length - a.name.length) // longest first to avoid partial matches
 
@@ -187,7 +197,6 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
         placeholder={placeholder}
         rows={rows}
         className={className}
-        // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus={autoFocus}
       />
       {showDropdown && (

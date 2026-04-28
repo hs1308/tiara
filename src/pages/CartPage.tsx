@@ -2,7 +2,7 @@ import { Minus, Plus, Wallet } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useCart, useCurrentUser, useProducts, useUpdateCartItem } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
-import { useDemoApp } from '../state/DemoAppProvider'
+import { useDemoApp } from '../state/useDemoApp'
 
 export function CartPage() {
   const { data: cartItems = [] } = useCart()
