@@ -87,7 +87,7 @@ export function BrandPage() {
             <span className="section-kicker">Community snapshot</span>
             <h2>What the community says about {resolvedBrandName}</h2>
           </div>
-          <Link to="/feed" className="inline-link">
+          <Link to={`/feed?brand=${encodeURIComponent(resolvedBrandName)}`} className="inline-link">
             See all discussions <ArrowRight size={15} />
           </Link>
         </div>
@@ -149,7 +149,7 @@ export function BrandPage() {
               <span className="section-kicker">Top community posts</span>
               <h2>Most upvoted discussions about {resolvedBrandName}</h2>
             </div>
-            <Link to="/feed" className="inline-link">
+            <Link to={`/feed?brand=${encodeURIComponent(resolvedBrandName)}`} className="inline-link">
               See all <ArrowRight size={15} />
             </Link>
           </div>
