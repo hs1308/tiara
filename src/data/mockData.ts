@@ -1,4 +1,4 @@
-import type { Brand, CartItem, Comment, OrderRecord, Post, Product, UserProfile } from '../types'
+import type { CartItem, Comment, OrderRecord, Post, Product, UserProfile } from '../types'
 
 export const demoUserId = 'user-tiara-aanya'
 
