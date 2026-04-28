@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { FilterDropdown } from '../components/ui/FilterDropdown'
 import { PostCard } from '../components/ui/PostCard'
