@@ -315,3 +315,17 @@ export async function upvoteComment({ commentId, postId }: { commentId: string; 
   writeStorage(STORAGE_KEYS.comments, nextComments)
   return { ...target, postId }
 }
+
+export async function updatePost(postId: string, input: Partial<Pick<Post, 'type' | 'title' | 'description' | 'tags'>>) {
+  const posts = await getPosts()
+  const nextPosts = posts.map((post) =>
+    post.id === postId ? { ...post, ...input } : post,
+  )
+
+  if (await canUseSupabase()) {
+    await supabase!.from('tiara_posts').update(input).eq('id', postId)
+  }
+
+  writeStorage(STORAGE_KEYS.posts, nextPosts)
+  return nextPosts.find((p) => p.id === postId)!
+}

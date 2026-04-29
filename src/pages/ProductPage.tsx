@@ -97,15 +97,11 @@ export function ProductPage() {
             <span className="section-kicker">What the community is saying</span>
             <h2>Social proof, context, and the nuanced bits that star ratings miss</h2>
           </div>
-          <Link to="/feed" className="inline-link">
+          <Link to={`/feed?product=${product.id}`} className="inline-link">
             See all discussions <ArrowRight size={15} />
           </Link>
         </div>
         <div className="snapshot-panel">
-          <div className="snapshot-stat">
-            <strong>{product.communityScore}/10</strong>
-            <span>Community score</span>
-          </div>
           <div className="snapshot-stat">
             <strong>78%</strong>
             <span>Positive sentiment</span>
@@ -114,13 +110,6 @@ export function ProductPage() {
             <strong>{product.discussionCount}</strong>
             <span>Posts and comments</span>
           </div>
-        </div>
-        <div className="tag-row">
-          {product.tags.map((tag) => (
-            <span key={tag} className="tag-pill">
-              {tag}
-            </span>
-          ))}
         </div>
         <div className="feed-stack">
           {relatedPosts.map((post) => (

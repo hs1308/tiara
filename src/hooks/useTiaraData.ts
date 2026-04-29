@@ -19,6 +19,7 @@ import {
   searchBrandsAndProducts,
   upvoteComment,
   updateCartItem,
+  updatePost,
 } from '../services/api'
 import type { PlaceOrderInput } from '../services/api'
 
@@ -126,6 +127,17 @@ export function useCreatePost() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: createPost,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['posts'] })
+    },
+  })
+}
+
+export function useUpdatePost() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ postId, input }: { postId: string; input: Parameters<typeof updatePost>[1] }) =>
+      updatePost(postId, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['posts'] })
     },

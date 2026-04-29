@@ -2,7 +2,9 @@ import { ArrowUpRight, MessageCircle, ThumbsUp } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { formatDate } from '../../lib/format'
 import { brandSlug } from '../../lib/utils'
+import { useProducts, useBrands } from '../../hooks/useTiaraData'
 import type { Post, Product, UserProfile } from '../../types'
+import type { ReactNode } from 'react'
 
 interface PostCardProps {
   post: Post
@@ -11,8 +13,54 @@ interface PostCardProps {
   compact?: boolean
 }
 
+function renderBody(body: string, productList: Product[], brandNames: string[]): ReactNode[] {
+  // Build entity list sorted longest-first to avoid partial matches
+  const entities = [
+    ...brandNames.map((name) => ({ name, to: `/brand/${brandSlug(name)}`, type: 'brand' as const })),
+    ...productList.map((p) => ({ name: p.name, to: `/product/${p.id}`, type: 'product' as const })),
+  ].sort((a, b) => b.name.length - a.name.length)
+
+  const nodes: ReactNode[] = []
+  let remaining = body
+  let key = 0
+
+  while (remaining.length > 0) {
+    const atIdx = remaining.indexOf('@')
+    if (atIdx === -1) { nodes.push(remaining); break }
+    if (atIdx > 0) { nodes.push(remaining.slice(0, atIdx)); remaining = remaining.slice(atIdx) }
+    const afterAt = remaining.slice(1)
+    const match = entities.find((e) => afterAt.startsWith(e.name))
+    if (match) {
+      nodes.push(
+        <Link
+          key={key++}
+          to={match.to}
+          className={`mention-link${match.type === 'brand' ? ' mention-link-brand' : ''}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          @{match.name}
+        </Link>,
+      )
+      remaining = remaining.slice(1 + match.name.length)
+    } else {
+      nodes.push('@')
+      remaining = remaining.slice(1)
+    }
+  }
+  return nodes
+}
+
 export function PostCard({ post, author, product, compact }: PostCardProps) {
   const navigate = useNavigate()
+  const { data: allProducts = [] } = useProducts()
+  const { data: allBrands = [] } = useBrands()
+
+  const brandNames = [
+    ...allBrands.map((b) => b.name),
+    ...new Set(allProducts.map((p) => p.brand)),
+  ].filter((name, i, list) => list.indexOf(name) === i)
+
+  const hasAtMention = post.description?.includes('@')
 
   return (
     <article className={`post-card${compact ? ' compact' : ''}`}>
@@ -33,7 +81,14 @@ export function PostCard({ post, author, product, compact }: PostCardProps) {
       <Link to={`/feed/${post.id}`}>
         <h3 className="post-title">{post.title}</h3>
       </Link>
-      <p className="post-description">{post.description}</p>
+
+      {/* Description — render @ mentions as clickable links */}
+      <p className="post-description">
+        {hasAtMention
+          ? renderBody(post.description, allProducts, brandNames)
+          : post.description}
+      </p>
+
       {post.image ? <img src={post.image} alt={post.title} className="post-image" /> : null}
 
       {/* Tags — clickable, navigate to feed filtered by tag */}
@@ -56,14 +111,18 @@ export function PostCard({ post, author, product, compact }: PostCardProps) {
         </div>
       )}
 
-      {/* Brand mention — clickable, navigates to brand page */}
+      {/* Brand mention chip — when post has brand but no tagged product */}
       {post.brand && !product && (
-        <Link to={`/brand/${brandSlug(post.brand)}`} className="post-brand-mention">
+        <Link
+          to={`/brand/${brandSlug(post.brand)}`}
+          className="post-brand-mention"
+          onClick={(e) => e.stopPropagation()}
+        >
           {post.brand}
         </Link>
       )}
 
-      {/* Linked product — brand name also clickable */}
+      {/* Linked product */}
       {product ? (
         <Link to={`/product/${product.id}`} className="linked-product">
           <img src={product.heroImage} alt={product.name} />

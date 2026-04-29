@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { demoUserId } from '../../data/mockData'
-import { useCreatePost, useMentionSearch, usePost, useProducts } from '../../hooks/useTiaraData'
+import { useCreatePost, useMentionSearch, usePost, useProducts, useUpdatePost } from '../../hooks/useTiaraData'
 import type { PostType } from '../../types'
 
 const postTypes: PostType[] = [
@@ -32,8 +32,10 @@ export function CreatePostForm({
   const { data: products = [] } = useProducts()
   const { data: existingPost } = usePost(editPostId ?? '')
   const createPost = useCreatePost()
+  const updatePostMutation = useUpdatePost()
   const linkedProduct = products.find((product) => product.id === productId)
   const isEditMode = !!editPostId
+  const isPending = isEditMode ? updatePostMutation.isPending : createPost.isPending
 
   const [type, setType] = useState<PostType>(defaultType)
   const [title, setTitle] = useState(
@@ -105,19 +107,27 @@ export function CreatePostForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    // In edit mode we reuse createPost but with the existing post's id override
-    // For demo purposes this creates a new post — in production would call updatePost
-    const nextPost = await createPost.mutateAsync({
-      authorId: demoUserId,
-      productId: existingPost?.productId ?? linkedProduct?.id ?? null,
-      brand: existingPost?.brand ?? linkedProduct?.brand ?? null,
-      type,
-      title,
-      description,
-      image: existingPost?.image ?? linkedProduct?.heroImage ?? null,
-      tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
-    })
-    onSuccess?.(nextPost.id)
+    const parsedTags = tags.split(',').map((tag) => tag.trim()).filter(Boolean)
+
+    if (isEditMode && editPostId) {
+      const updated = await updatePostMutation.mutateAsync({
+        postId: editPostId,
+        input: { type, title, description, tags: parsedTags },
+      })
+      onSuccess?.(updated.id)
+    } else {
+      const nextPost = await createPost.mutateAsync({
+        authorId: demoUserId,
+        productId: existingPost?.productId ?? linkedProduct?.id ?? null,
+        brand: existingPost?.brand ?? linkedProduct?.brand ?? null,
+        type,
+        title,
+        description,
+        image: existingPost?.image ?? linkedProduct?.heroImage ?? null,
+        tags: parsedTags,
+      })
+      onSuccess?.(nextPost.id)
+    }
   }
 
   return (
@@ -210,8 +220,8 @@ export function CreatePostForm({
             placeholder="Pigmentation, Mumbai humidity, Office makeup"
           />
         </label>
-        <button type="submit" className="primary-button full" disabled={createPost.isPending}>
-          {createPost.isPending
+        <button type="submit" className="primary-button full" disabled={isPending}>
+          {isPending
             ? isEditMode ? 'Saving...' : 'Publishing...'
             : isEditMode ? 'Save changes' : 'Publish post'}
         </button>
