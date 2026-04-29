@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import type { FormEvent } from 'react'
+import { useRef, useState } from 'react'
+import type { FormEvent, KeyboardEvent } from 'react'
 import { demoUserId } from '../../data/mockData'
-import { useCreatePost, useProducts } from '../../hooks/useTiaraData'
+import { useCreatePost, useMentionSearch, useProducts } from '../../hooks/useTiaraData'
 import type { PostType } from '../../types'
 
 const postTypes: PostType[] = [
@@ -38,6 +38,59 @@ export function CreatePostForm({
   const [description, setDescription] = useState('')
   const [tags, setTags] = useState(linkedProduct ? linkedProduct.tags.slice(0, 2).join(', ') : '')
 
+  // @ mention state
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null)
+  const [mentionStart, setMentionStart] = useState<number>(-1)
+  const descRef = useRef<HTMLTextAreaElement>(null)
+
+  const { data: mentionResults = [] } = useMentionSearch(mentionQuery)
+
+  function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const val = e.target.value
+    setDescription(val)
+
+    const cursor = e.target.selectionStart ?? val.length
+    // Find the @ that is closest before the cursor with no spaces after it
+    const textUpToCursor = val.slice(0, cursor)
+    const atIndex = textUpToCursor.lastIndexOf('@')
+    if (atIndex !== -1) {
+      const queryText = textUpToCursor.slice(atIndex + 1)
+      if (!queryText.includes(' ')) {
+        setMentionQuery(queryText)
+        setMentionStart(atIndex)
+        return
+      }
+    }
+    setMentionQuery(null)
+    setMentionStart(-1)
+  }
+
+  function handleDescriptionKeyDown(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (mentionQuery !== null && e.key === 'Escape') {
+      setMentionQuery(null)
+    }
+  }
+
+  function insertMention(label: string) {
+    if (mentionStart === -1 || !descRef.current) return
+    const cursor = descRef.current.selectionStart ?? description.length
+    const before = description.slice(0, mentionStart)
+    const after = description.slice(cursor)
+    const inserted = `@${label} `
+    const next = before + inserted + after
+    setDescription(next)
+    setMentionQuery(null)
+    setMentionStart(-1)
+    // Restore focus and cursor
+    setTimeout(() => {
+      if (descRef.current) {
+        const pos = before.length + inserted.length
+        descRef.current.focus()
+        descRef.current.setSelectionRange(pos, pos)
+      }
+    }, 0)
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const nextPost = await createPost.mutateAsync({
@@ -53,7 +106,6 @@ export function CreatePostForm({
         .map((tag) => tag.trim())
         .filter(Boolean),
     })
-
     onSuccess?.(nextPost.id)
   }
 
@@ -63,7 +115,7 @@ export function CreatePostForm({
         <div className="section-head">
           <div>
             <span className="section-kicker">Create post</span>
-            <h2>Let users move from commerce back into community with one clean action</h2>
+            <h2>Share your experience with the community</h2>
           </div>
           {modal ? (
             <button type="button" className="secondary-button" onClick={onCancel}>
@@ -91,16 +143,53 @@ export function CreatePostForm({
           <span>Title</span>
           <input value={title} onChange={(event) => setTitle(event.target.value)} required />
         </label>
-        <label className="field">
+
+        {/* Description with @ mention */}
+        <div className="field">
           <span>Description</span>
-          <textarea
-            value={description}
-            onChange={(event) => setDescription(event.target.value)}
-            rows={6}
-            placeholder="What worked, what surprised you, and what should the next buyer know?"
-            required
-          />
-        </label>
+          <div className="mention-wrap">
+            <textarea
+              ref={descRef}
+              className="comment-form-inline-textarea"
+              value={description}
+              onChange={handleDescriptionChange}
+              onKeyDown={handleDescriptionKeyDown}
+              rows={6}
+              placeholder="What worked, what surprised you? Use @brand or @product to tag something."
+              required
+            />
+            {mentionQuery !== null && mentionResults.length > 0 && (
+              <div className="mention-dropdown">
+                {mentionResults.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="mention-item"
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      insertMention(item.label)
+                    }}
+                  >
+                    <span className="mention-item-icon">
+                      {item.type === 'brand' ? '🏷' : '✨'}
+                    </span>
+                    <span className="mention-item-body">
+                      <span className="mention-item-label">{item.label}</span>
+                      {item.sublabel && <span className="mention-item-sub">{item.sublabel}</span>}
+                    </span>
+                    <span className={`mention-item-badge mention-badge-${item.type}`}>
+                      {item.type}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: '6px 0 0' }}>
+            Tip: type @ to tag a brand or product inline
+          </p>
+        </div>
+
         <label className="field">
           <span>Tags</span>
           <input

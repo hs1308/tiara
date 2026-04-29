@@ -79,8 +79,8 @@ export const mockProducts: Product[] = [
       'https://images.unsplash.com/photo-1556228578-dd6c7935df10?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80',
     ],
-    tags: ['Dark circles', 'Under-eye', 'Puffiness'],
-    suitability: ['All skin types', 'Sensitive skin', 'Under-eye concerns'],
+    tags: ['Dark circles', 'Under-eye', 'Brightening', 'Puffiness'],
+    suitability: ['All skin types', 'Sensitive skin', 'Under-eye concerns', 'dark circles'],
     ingredients: ['Vitamin E', 'Green tea extract', 'Hyaluronic acid'],
     howToUse: 'Apply a small amount under the eyes using the ring finger. Use twice daily, morning and night.',
     offers: ['10% off on first order', 'Wallet credits applicable'],
@@ -231,9 +231,9 @@ export const mockProducts: Product[] = [
     description:
       'A cushiony lip treatment that layers well under tints and survives AC-heavy office days.',
     heroImage:
-      'https://images.unsplash.com/photo-1619451684019-89f773c79b06?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1556228578-dd6c7935df10?auto=format&fit=crop&w=900&q=80',
     gallery: [
-      'https://images.unsplash.com/photo-1619451684019-89f773c79b06?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1556228578-dd6c7935df10?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1589985270958-b3e3c3f5d6d3?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?auto=format&fit=crop&w=900&q=80',
     ],

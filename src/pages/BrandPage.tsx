@@ -142,30 +142,6 @@ export function BrandPage() {
         </div>
       </section>
 
-      {topPosts.length > 0 && (
-        <section className="section-block">
-          <div className="section-head">
-            <div>
-              <span className="section-kicker">Top community posts</span>
-              <h2>Most upvoted discussions about {resolvedBrandName}</h2>
-            </div>
-            <Link to={`/feed?brand=${encodeURIComponent(resolvedBrandName)}`} className="inline-link">
-              See all <ArrowRight size={15} />
-            </Link>
-          </div>
-          <div className="feed-stack">
-            {topPosts.map((post) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                author={users.find((u) => u.id === post.authorId)}
-                product={allProducts.find((p) => p.id === post.productId)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="section-block">
         <div className="section-head">
           <div>
