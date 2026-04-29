@@ -94,11 +94,28 @@ export function FeedPage() {
   // Filter
   const filtered = sorted.filter((post) => {
     const product = products.find((p) => p.id === post.productId)
+    // Normalise tags — Supabase returns jsonb which may be parsed as array or string
+    const postTagsArr: string[] = Array.isArray(post.tags)
+      ? post.tags
+      : typeof post.tags === 'string'
+        ? JSON.parse(post.tags as string)
+        : []
+    const productTagsArr: string[] = Array.isArray(product?.tags)
+      ? product!.tags
+      : typeof product?.tags === 'string'
+        ? JSON.parse(product!.tags as string)
+        : []
+    const suitabilityArr: string[] = Array.isArray(product?.suitability)
+      ? product!.suitability
+      : typeof product?.suitability === 'string'
+        ? JSON.parse(product!.suitability as string)
+        : []
+
     const allText = [
       post.title, post.description, post.brand,
-      ...(post.tags ?? []),
+      ...postTagsArr,
       product?.name, product?.category, product?.description,
-      ...(product?.tags ?? []), ...(product?.suitability ?? []),
+      ...productTagsArr, ...suitabilityArr,
     ].filter(Boolean).join(' ')
 
     if (care && !matchesSearch(allText, care) && product?.category !== care) return false

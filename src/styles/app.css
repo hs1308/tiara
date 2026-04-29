@@ -543,7 +543,11 @@
 .wallet-hero h1,
 .success-panel h1,
 .profile-hero h1 {
-  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  font-size: clamp(1.4rem, 2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
 }
 
 .thread-image,
@@ -2331,4 +2335,84 @@
 
 .linked-product-brand:hover {
   opacity: 0.65;
+}
+
+/* ── Comment context menu ── */
+
+.comment-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 60;
+  background: white;
+  border: 1px solid rgba(23, 50, 44, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  min-width: 140px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.comment-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 9px 12px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+
+.comment-menu-item:hover {
+  background: rgba(23, 50, 44, 0.05);
+}
+
+.comment-menu-danger {
+  color: #c94020;
+}
+
+.comment-menu-danger:hover {
+  background: rgba(220, 60, 20, 0.06);
+}
+
+/* ── AI Summary pinned comment ── */
+
+.ai-summary-comment {
+  background: linear-gradient(135deg, rgba(226, 239, 232, 0.6), rgba(255, 255, 255, 0.9)) !important;
+  border-color: rgba(15, 79, 70, 0.15) !important;
+}
+
+.ai-summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding: 3px 10px;
+  background: rgba(226, 239, 232, 0.8);
+  border-radius: 999px;
+}
+
+.ai-summary-list {
+  margin: 6px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 0.92rem;
+}
+
+.ai-summary-list li {
+  line-height: 1.5;
 }

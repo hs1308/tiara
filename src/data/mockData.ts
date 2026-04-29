@@ -462,6 +462,15 @@ export const mockComments: Comment[] = [
     parentId: null,
   },
   {
+    id: 'ai-summary-post-001',
+    postId: 'post-001',
+    authorId: 'user-tiara-naina',
+    body: 'AI_SUMMARY: • Dot & Key Watermelon Sunscreen SPF 50 consistently praised for not pilling over moisturiser in Mumbai humidity • Works well for combination and oily skin — multiple users confirm no midday shine breakthrough • Layers cleanly under tinted moisturiser without white cast • Stays comfortable for 6+ hours in hot and humid conditions • Dry-skin users recommend a richer moisturiser underneath',
+    upvotes: 47,
+    createdAt: '2026-04-27T11:23:00.000Z',
+    parentId: null,
+  },
+  {
     id: 'comment-001',
     postId: 'post-001',
     authorId: demoUserId,

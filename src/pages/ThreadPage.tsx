@@ -6,11 +6,14 @@ import {
   ChevronRight,
   CornerDownRight,
   MessageCircle,
+  MoreHorizontal,
+  Pencil,
   Send,
   ShoppingBag,
   ThumbsUp,
+  Trash2,
 } from 'lucide-react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { demoUserId } from '../data/mockData'
 import {
   useBrands,
@@ -23,6 +26,7 @@ import {
   useUsers,
 } from '../hooks/useTiaraData'
 import { formatDate } from '../lib/format'
+import { brandSlug } from '../lib/utils'
 import type { Brand, Comment, Product } from '../types'
 
 interface ThreadedComment extends Comment {
@@ -48,6 +52,13 @@ function buildCommentTree(comments: Comment[]) {
     roots.push(comment)
   })
 
+  // Pin AI summary to top
+  roots.sort((a, b) => {
+    if (a.body.startsWith('AI_SUMMARY:')) return -1
+    if (b.body.startsWith('AI_SUMMARY:')) return 1
+    return 0
+  })
+
   return roots
 }
 
@@ -69,7 +80,7 @@ function renderCommentBody(body: string, products: Product[], brands: Brand[]): 
   const entities: MentionEntity[] = [
     ...brandEntities.map((name) => ({
       name,
-      to: `/brand/${encodeURIComponent(name)}`,
+      to: `/brand/${brandSlug(name)}`,
       type: 'brand' as const,
     })),
     ...products.map((p) => ({ name: p.name, to: `/product/${p.id}`, type: 'product' as const })),
@@ -237,12 +248,19 @@ interface CommentNodeProps {
   activeReplyId: string | null
   replyDraft: string
   isReplying: boolean
+  editingCommentId: string | null
+  editDraft: string
   onReplyDraftChange: (value: string) => void
   onReplySubmit: (event: FormEvent<HTMLFormElement>, commentId: string) => void
   onToggleCollapse: (commentId: string) => void
   onReply: (commentId: string) => void
   onCancelReply: () => void
   onUpvote: (commentId: string) => void
+  onEditStart: (commentId: string, body: string) => void
+  onEditDraftChange: (value: string) => void
+  onEditSubmit: (commentId: string) => void
+  onEditCancel: () => void
+  onDelete: (commentId: string) => void
   users: Array<{ id: string; name: string; username: string; avatar: string }>
   products: Product[]
   brands: Brand[]
@@ -255,12 +273,19 @@ function CommentNode({
   activeReplyId,
   replyDraft,
   isReplying,
+  editingCommentId,
+  editDraft,
   onReplyDraftChange,
   onReplySubmit,
   onToggleCollapse,
   onReply,
   onCancelReply,
   onUpvote,
+  onEditStart,
+  onEditDraftChange,
+  onEditSubmit,
+  onEditCancel,
+  onDelete,
   users,
   products,
   brands,
@@ -269,6 +294,9 @@ function CommentNode({
   const isCollapsed = collapsedIds.has(comment.id)
   const hasChildren = comment.children.length > 0
   const isReplyTarget = activeReplyId === comment.id
+  const isOwn = comment.authorId === demoUserId
+  const isEditing = editingCommentId === comment.id
+  const [showMenu, setShowMenu] = useState(false)
 
   return (
     <div className="thread-node" style={{ '--thread-level': level } as React.CSSProperties}>
@@ -289,17 +317,87 @@ function CommentNode({
       </div>
 
       <div className="thread-content">
-        <article className="thread-comment">
+        <article className={`thread-comment${comment.body.startsWith('AI_SUMMARY:') ? ' ai-summary-comment' : ''}`}>
           <div className="author-row">
             <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
-            <div>
-              <div className="author-name">{author?.name}</div>
+            <div style={{ flex: 1 }}>
+              <div className="author-name">
+                {comment.body.startsWith('AI_SUMMARY:')
+                  ? <span className="ai-summary-label">✦ AI Summary</span>
+                  : author?.name}
+              </div>
               <div className="meta-line">
-                @{author?.username} · {formatDate(comment.createdAt)}
+                {comment.body.startsWith('AI_SUMMARY:') ? 'Auto-generated from community responses' : `@${author?.username} · ${formatDate(comment.createdAt)}`}
               </div>
             </div>
+            {isOwn && (
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  className="thread-action-button"
+                  onClick={() => setShowMenu((s) => !s)}
+                  aria-label="More options"
+                >
+                  <MoreHorizontal size={15} />
+                </button>
+                {showMenu && (
+                  <div className="comment-menu">
+                    <button
+                      type="button"
+                      className="comment-menu-item"
+                      onClick={() => { onEditStart(comment.id, comment.body); setShowMenu(false) }}
+                    >
+                      <Pencil size={13} /> Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="comment-menu-item comment-menu-danger"
+                      onClick={() => { onDelete(comment.id); setShowMenu(false) }}
+                    >
+                      <Trash2 size={13} /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          <p>{renderCommentBody(comment.body, products, brands)}</p>
+
+          {isEditing ? (
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <MentionTextarea
+                value={editDraft}
+                onChange={onEditDraftChange}
+                placeholder="Edit your comment…"
+                rows={3}
+                className="inline-reply-textarea"
+                autoFocus
+              />
+              <div className="inline-reply-actions">
+                <button type="button" className="secondary-button" onClick={onEditCancel}>Cancel</button>
+                <button
+                  type="button"
+                  className="primary-button comment-submit"
+                  onClick={() => onEditSubmit(comment.id)}
+                  disabled={!editDraft.trim()}
+                >
+                  <Send size={15} /> Save
+                </button>
+              </div>
+            </div>
+          ) : comment.body.startsWith('AI_SUMMARY:') ? (
+            <div>
+              <ul className="ai-summary-list">
+                {comment.body
+                  .replace('AI_SUMMARY:', '')
+                  .split('•')
+                  .filter(Boolean)
+                  .map((point, i) => <li key={i}>{point.trim()}</li>)}
+              </ul>
+            </div>
+          ) : (
+            <p>{renderCommentBody(comment.body, products, brands)}</p>
+          )}
+
           <div className="thread-actions">
             <button
               type="button"
@@ -362,12 +460,19 @@ function CommentNode({
                 activeReplyId={activeReplyId}
                 replyDraft={replyDraft}
                 isReplying={isReplying}
+                editingCommentId={editingCommentId}
+                editDraft={editDraft}
                 onReplyDraftChange={onReplyDraftChange}
                 onReplySubmit={onReplySubmit}
                 onToggleCollapse={onToggleCollapse}
                 onReply={onReply}
                 onCancelReply={onCancelReply}
                 onUpvote={onUpvote}
+                onEditStart={onEditStart}
+                onEditDraftChange={onEditDraftChange}
+                onEditSubmit={onEditSubmit}
+                onEditCancel={onEditCancel}
+                onDelete={onDelete}
                 users={users}
                 products={products}
                 brands={brands}
@@ -384,11 +489,15 @@ function CommentNode({
 
 export function ThreadPage() {
   const { postId = '' } = useParams()
+  const navigate = useNavigate()
   const [draft, setDraft] = useState('')
   const [replyDraft, setReplyDraft] = useState('')
   const [replyTargetId, setReplyTargetId] = useState<string | null>(null)
   const [collapsedIds, setCollapsedIds] = useState<string[]>([])
-  const { data: post } = usePost(postId)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editDraft, setEditDraft] = useState('')
+  const [localComments, setLocalComments] = useState<Comment[] | null>(null)
+  const { data: post, refetch: refetchPost } = usePost(postId)
   const { data: comments = [] } = useComments(postId)
   const { data: users = [] } = useUsers()
   const { data: products = [] } = useProducts()
@@ -396,7 +505,8 @@ export function ThreadPage() {
   const createComment = useCreateComment()
   const upvoteComment = useUpvoteComment()
 
-  const commentTree = useMemo(() => buildCommentTree(comments), [comments])
+  const displayComments = localComments ?? comments
+  const commentTree = useMemo(() => buildCommentTree(displayComments), [displayComments])
   const collapsedSet = useMemo(() => new Set(collapsedIds), [collapsedIds])
 
   if (!post) {
@@ -405,37 +515,21 @@ export function ThreadPage() {
 
   const author = users.find((user) => user.id === post.authorId)
   const product = products.find((item) => item.id === post.productId)
+  const isOwnPost = post.authorId === demoUserId
 
   function submitTopLevelComment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!draft.trim()) return
-
-    createComment.mutate({
-      postId,
-      authorId: demoUserId,
-      body: draft.trim(),
-      parentId: null,
-    })
+    createComment.mutate({ postId, authorId: demoUserId, body: draft.trim(), parentId: null })
     setDraft('')
   }
 
   function submitReply(event: FormEvent<HTMLFormElement>, parentId: string) {
     event.preventDefault()
     if (!replyDraft.trim()) return
-
     createComment.mutate(
-      {
-        postId,
-        authorId: demoUserId,
-        body: replyDraft.trim(),
-        parentId,
-      },
-      {
-        onSuccess: () => {
-          setReplyDraft('')
-          setReplyTargetId(null)
-        },
-      },
+      { postId, authorId: demoUserId, body: replyDraft.trim(), parentId },
+      { onSuccess: () => { setReplyDraft(''); setReplyTargetId(null) } },
     )
   }
 
@@ -447,25 +541,66 @@ export function ThreadPage() {
     )
   }
 
+  function handleEditStart(commentId: string, body: string) {
+    setEditingCommentId(commentId)
+    setEditDraft(body)
+  }
+
+  function handleEditSubmit(commentId: string) {
+    if (!editDraft.trim()) return
+    setLocalComments((prev) => {
+      const base = prev ?? comments
+      return base.map((c) => c.id === commentId ? { ...c, body: editDraft.trim() } : c)
+    })
+    setEditingCommentId(null)
+    setEditDraft('')
+  }
+
+  function handleEditCancel() {
+    setEditingCommentId(null)
+    setEditDraft('')
+  }
+
+  function handleDeleteComment(commentId: string) {
+    setLocalComments((prev) => {
+      const base = prev ?? comments
+      return base.filter((c) => c.id !== commentId)
+    })
+  }
+
   return (
     <div className="page-stack">
       <article className="thread-hero">
-        <div className="author-row">
-          <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
-          <div>
-            <div className="author-name">{author?.name}</div>
-            <div className="meta-line">
-              {post.type} · {formatDate(post.createdAt)}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div className="author-row">
+            <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+            <div>
+              <div className="author-name">{author?.name}</div>
+              <div className="meta-line">
+                {post.type} · {formatDate(post.createdAt)}
+              </div>
             </div>
           </div>
+          {isOwnPost && (
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className="thread-action-button"
+                title="Delete post"
+                onClick={() => { if (window.confirm('Delete this post?')) navigate('/feed') }}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          )}
         </div>
-        <h1 className="thread-title">{post.title}</h1>
+        <h2 className="thread-title">{post.title}</h2>
         <p className="thread-copy">{post.description}</p>
         <div className="tag-row">
           {post.tags.map((tag) => (
-            <span key={tag} className="tag-pill">
+            <Link key={tag} to={`/feed?problem=${encodeURIComponent(tag)}`} className="tag-pill tag-pill-btn">
               {tag}
-            </span>
+            </Link>
           ))}
         </div>
         {post.image ? <img src={post.image} alt={post.title} className="thread-image" /> : null}
@@ -485,7 +620,7 @@ export function ThreadPage() {
         <div className="section-head">
           <div>
             <span className="section-kicker">Comments</span>
-            <h2>{comments.length} people weighed in</h2>
+            <h2>{displayComments.length} people weighed in</h2>
           </div>
           <div className="thread-count">
             <MessageCircle size={15} />
@@ -523,18 +658,19 @@ export function ThreadPage() {
             activeReplyId={replyTargetId}
             replyDraft={replyDraft}
             isReplying={createComment.isPending}
+            editingCommentId={editingCommentId}
+            editDraft={editDraft}
             onReplyDraftChange={setReplyDraft}
             onReplySubmit={submitReply}
             onToggleCollapse={toggleCollapse}
-            onReply={(commentId) => {
-              setReplyTargetId(commentId)
-              setReplyDraft('')
-            }}
-            onCancelReply={() => {
-              setReplyTargetId(null)
-              setReplyDraft('')
-            }}
+            onReply={(commentId) => { setReplyTargetId(commentId); setReplyDraft('') }}
+            onCancelReply={() => { setReplyTargetId(null); setReplyDraft('') }}
             onUpvote={(commentId) => upvoteComment.mutate({ commentId, postId })}
+            onEditStart={handleEditStart}
+            onEditDraftChange={setEditDraft}
+            onEditSubmit={handleEditSubmit}
+            onEditCancel={handleEditCancel}
+            onDelete={handleDeleteComment}
             users={users}
             products={products}
             brands={brands}
