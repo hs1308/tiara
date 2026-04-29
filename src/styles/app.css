@@ -1394,9 +1394,10 @@
 
 .brand-identity {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 16px;
-  margin-top: -44px;
+  margin-top: -36px;
+  padding-top: 0;
 }
 
 .brand-logo {
@@ -1407,11 +1408,14 @@
   border: 3px solid white;
   box-shadow: var(--shadow-soft);
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .brand-name {
   margin: 0;
   font-size: clamp(1.5rem, 4vw, 2.2rem);
+  padding-top: 36px;
 }
 
 .brand-tagline {
@@ -2263,4 +2267,68 @@
   background: rgba(226, 239, 232, 0.7);
   color: var(--accent);
   font-weight: 600;
+}
+
+/* ── Clickable tag pills ── */
+
+.tag-pill-btn {
+  border: none;
+  cursor: pointer;
+  transition: background 160ms ease, transform 120ms ease;
+  font: inherit;
+}
+
+.tag-pill-btn:hover {
+  background: rgba(15, 79, 70, 0.14);
+  transform: translateY(-1px);
+}
+
+/* ── Brand link in eyebrow (product card) ── */
+
+.eyebrow-link {
+  text-decoration: none;
+  transition: opacity 160ms ease;
+}
+
+.eyebrow-link:hover {
+  opacity: 0.65;
+}
+
+/* ── Brand mention chip in post body ── */
+
+.post-brand-mention {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  background: rgba(243, 217, 209, 0.45);
+  color: #8b4a3a;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 160ms ease;
+}
+
+.post-brand-mention:hover {
+  background: rgba(243, 217, 209, 0.85);
+}
+
+/* ── Linked product brand button ── */
+
+.linked-product-brand {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 160ms ease;
+}
+
+.linked-product-brand:hover {
+  opacity: 0.65;
 }

@@ -147,7 +147,7 @@ export function HomePage() {
           <div className="contextual-col">
             <div className="contextual-subhead">
               <span className="section-kicker">Products that helped</span>
-              <Link to="/shop" className="inline-link">See all</Link>
+              <Link to={`/shop?concern=${encodeURIComponent(CONTEXTUAL_TOPIC)}`} className="inline-link">See all</Link>
             </div>
             <div className="hero-product-list">
               {contextualProducts.map((product) => (
@@ -163,7 +163,7 @@ export function HomePage() {
           <div className="contextual-col">
             <div className="contextual-subhead">
               <span className="section-kicker">What people are saying</span>
-              <Link to="/feed" className="inline-link">See all</Link>
+              <Link to={`/feed?problem=${encodeURIComponent(CONTEXTUAL_TOPIC)}`} className="inline-link">See all</Link>
             </div>
             <div className="hero-post-list">
               {contextualPosts.map((post) => {

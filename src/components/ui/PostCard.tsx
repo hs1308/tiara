@@ -1,6 +1,7 @@
 import { ArrowUpRight, MessageCircle, ThumbsUp } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { formatDate } from '../../lib/format'
+import { brandSlug } from '../../lib/utils'
 import type { Post, Product, UserProfile } from '../../types'
 
 interface PostCardProps {
@@ -11,6 +12,8 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, author, product, compact }: PostCardProps) {
+  const navigate = useNavigate()
+
   return (
     <article className={`post-card${compact ? ' compact' : ''}`}>
       <div className="post-meta">
@@ -32,29 +35,58 @@ export function PostCard({ post, author, product, compact }: PostCardProps) {
       </Link>
       <p className="post-description">{post.description}</p>
       {post.image ? <img src={post.image} alt={post.title} className="post-image" /> : null}
-      <div className="tag-row">
-        {post.tags.map((tag) => (
-          <span key={tag} className="tag-pill">
-            {tag}
-          </span>
-        ))}
-      </div>
+
+      {/* Tags — clickable, navigate to feed filtered by tag */}
+      {post.tags?.length > 0 && (
+        <div className="tag-row">
+          {post.tags.map((tag) => (
+            <button
+              key={tag}
+              type="button"
+              className="tag-pill tag-pill-btn"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                navigate(`/feed?problem=${encodeURIComponent(tag)}`)
+              }}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Brand mention — clickable, navigates to brand page */}
+      {post.brand && !product && (
+        <Link to={`/brand/${brandSlug(post.brand)}`} className="post-brand-mention">
+          {post.brand}
+        </Link>
+      )}
+
+      {/* Linked product — brand name also clickable */}
       {product ? (
         <Link to={`/product/${product.id}`} className="linked-product">
           <img src={product.heroImage} alt={product.name} />
           <div>
-            <strong>{product.brand}</strong>
+            <button
+              type="button"
+              className="linked-product-brand"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                navigate(`/brand/${brandSlug(product.brand)}`)
+              }}
+            >
+              {product.brand}
+            </button>
             <span>{product.name}</span>
           </div>
         </Link>
       ) : null}
+
       <div className="post-stats">
-        <span>
-          <ThumbsUp size={14} /> {post.upvotes}
-        </span>
-        <span>
-          <MessageCircle size={14} /> {post.commentCount}
-        </span>
+        <span><ThumbsUp size={14} /> {post.upvotes}</span>
+        <span><MessageCircle size={14} /> {post.commentCount}</span>
       </div>
     </article>
   )

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { MessageCircle, ShoppingBag } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { formatCurrency } from '../../lib/format'
+import { brandSlug } from '../../lib/utils'
 import type { Product } from '../../types'
 
 interface ProductCardProps {
@@ -35,7 +36,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
         <img src={product.heroImage} alt={product.name} className="product-image" />
       </Link>
       <div className="product-copy">
-        <div className="eyebrow">{product.brand}</div>
+        <Link to={`/brand/${brandSlug(product.brand)}`} className="eyebrow eyebrow-link">{product.brand}</Link>
         <Link to={`/product/${product.id}`}>
           <h3 className="product-title">{product.name}</h3>
         </Link>
