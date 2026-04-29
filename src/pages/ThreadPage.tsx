@@ -497,7 +497,7 @@ export function ThreadPage() {
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editDraft, setEditDraft] = useState('')
   const [localComments, setLocalComments] = useState<Comment[] | null>(null)
-  const { data: post, refetch: refetchPost } = usePost(postId)
+  const { data: post } = usePost(postId)
   const { data: comments = [] } = useComments(postId)
   const { data: users = [] } = useUsers()
   const { data: products = [] } = useProducts()
