@@ -153,7 +153,8 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
 
   function detectMention(text: string, cursorPos: number) {
     const before = text.slice(0, cursorPos)
-    const match = before.match(/@(\w*)$/)
+    // Match @ followed by any non-whitespace chars (supports brands with & and spaces like "Dot & Key")
+    const match = before.match(/@([^@\n]*)$/)
     if (match) {
       setActiveMention({ query: match[1], atIndex: before.length - match[0].length })
     } else {
@@ -583,6 +584,14 @@ export function ThreadPage() {
           </div>
           {isOwnPost && (
             <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                type="button"
+                className="thread-action-button"
+                title="Edit post"
+                onClick={() => navigate(`/create?edit=${post.id}`)}
+              >
+                <Pencil size={15} />
+              </button>
               <button
                 type="button"
                 className="thread-action-button"

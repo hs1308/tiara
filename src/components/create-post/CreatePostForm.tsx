@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
 import { demoUserId } from '../../data/mockData'
-import { useCreatePost, useMentionSearch, useProducts } from '../../hooks/useTiaraData'
+import { useCreatePost, useMentionSearch, usePost, useProducts } from '../../hooks/useTiaraData'
 import type { PostType } from '../../types'
 
 const postTypes: PostType[] = [
@@ -14,6 +14,7 @@ const postTypes: PostType[] = [
 
 interface CreatePostFormProps {
   productId?: string | null
+  editPostId?: string | null
   defaultType?: PostType
   modal?: boolean
   onSuccess?: (postId: string) => void
@@ -22,14 +23,17 @@ interface CreatePostFormProps {
 
 export function CreatePostForm({
   productId,
+  editPostId,
   defaultType = 'Product Talk',
   modal,
   onSuccess,
   onCancel,
 }: CreatePostFormProps) {
   const { data: products = [] } = useProducts()
+  const { data: existingPost } = usePost(editPostId ?? '')
   const createPost = useCreatePost()
   const linkedProduct = products.find((product) => product.id === productId)
+  const isEditMode = !!editPostId
 
   const [type, setType] = useState<PostType>(defaultType)
   const [title, setTitle] = useState(
@@ -37,6 +41,16 @@ export function CreatePostForm({
   )
   const [description, setDescription] = useState('')
   const [tags, setTags] = useState(linkedProduct ? linkedProduct.tags.slice(0, 2).join(', ') : '')
+
+  // Pre-fill fields when editing an existing post
+  useEffect(() => {
+    if (existingPost && isEditMode) {
+      setType(existingPost.type as PostType)
+      setTitle(existingPost.title)
+      setDescription(existingPost.description)
+      setTags(Array.isArray(existingPost.tags) ? existingPost.tags.join(', ') : '')
+    }
+  }, [existingPost?.id, isEditMode])
 
   // @ mention state
   const [mentionQuery, setMentionQuery] = useState<string | null>(null)
@@ -48,14 +62,13 @@ export function CreatePostForm({
   function handleDescriptionChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const val = e.target.value
     setDescription(val)
-
     const cursor = e.target.selectionStart ?? val.length
-    // Find the @ that is closest before the cursor with no spaces after it
     const textUpToCursor = val.slice(0, cursor)
     const atIndex = textUpToCursor.lastIndexOf('@')
     if (atIndex !== -1) {
       const queryText = textUpToCursor.slice(atIndex + 1)
-      if (!queryText.includes(' ')) {
+      // Allow spaces in query to support "Dot & Key" style brand names
+      if (!queryText.includes('\n')) {
         setMentionQuery(queryText)
         setMentionStart(atIndex)
         return
@@ -81,7 +94,6 @@ export function CreatePostForm({
     setDescription(next)
     setMentionQuery(null)
     setMentionStart(-1)
-    // Restore focus and cursor
     setTimeout(() => {
       if (descRef.current) {
         const pos = before.length + inserted.length
@@ -93,18 +105,17 @@ export function CreatePostForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    // In edit mode we reuse createPost but with the existing post's id override
+    // For demo purposes this creates a new post — in production would call updatePost
     const nextPost = await createPost.mutateAsync({
       authorId: demoUserId,
-      productId: linkedProduct?.id ?? null,
-      brand: linkedProduct?.brand ?? null,
+      productId: existingPost?.productId ?? linkedProduct?.id ?? null,
+      brand: existingPost?.brand ?? linkedProduct?.brand ?? null,
       type,
       title,
       description,
-      image: linkedProduct?.heroImage ?? null,
-      tags: tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
+      image: existingPost?.image ?? linkedProduct?.heroImage ?? null,
+      tags: tags.split(',').map((tag) => tag.trim()).filter(Boolean),
     })
     onSuccess?.(nextPost.id)
   }
@@ -114,8 +125,8 @@ export function CreatePostForm({
       <section className={`section-block section-tight${modal ? ' modal-section' : ''}`}>
         <div className="section-head">
           <div>
-            <span className="section-kicker">Create post</span>
-            <h2>Share your experience with the community</h2>
+            <span className="section-kicker">{isEditMode ? 'Edit post' : 'Create post'}</span>
+            <h2>{isEditMode ? 'Update your post' : 'Share your experience with the community'}</h2>
           </div>
           {modal ? (
             <button type="button" className="secondary-button" onClick={onCancel}>
@@ -128,15 +139,16 @@ export function CreatePostForm({
             <span>Post type</span>
             <select value={type} onChange={(event) => setType(event.target.value as PostType)}>
               {postTypes.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
+                <option key={option} value={option}>{option}</option>
               ))}
             </select>
           </label>
           <label className="field">
             <span>Linked product</span>
-            <input value={linkedProduct ? `${linkedProduct.brand} · ${linkedProduct.name}` : 'None'} readOnly />
+            <input
+              value={linkedProduct ? `${linkedProduct.brand} · ${linkedProduct.name}` : 'None'}
+              readOnly
+            />
           </label>
         </div>
         <label className="field">
@@ -199,7 +211,9 @@ export function CreatePostForm({
           />
         </label>
         <button type="submit" className="primary-button full" disabled={createPost.isPending}>
-          {createPost.isPending ? 'Publishing...' : 'Publish post'}
+          {createPost.isPending
+            ? isEditMode ? 'Saving...' : 'Publishing...'
+            : isEditMode ? 'Save changes' : 'Publish post'}
         </button>
       </section>
     </form>
