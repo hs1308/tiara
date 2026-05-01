@@ -37,7 +37,7 @@ function getContextualPosts(posts: Post[], products: Product[]) {
       ...(Array.isArray(product?.suitability) ? product!.suitability : []),
     ])
   })
-  return (matched.length ? matched : [...posts].sort((a, b) => b.upvotes - a.upvotes)).slice(0, 3)
+  return (matched.length ? matched : [...posts].sort((a, b) => b.upvotes - a.upvotes)).slice(0, 4)
 }
 
 export function HomePage() {

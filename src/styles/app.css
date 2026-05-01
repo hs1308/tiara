@@ -1609,6 +1609,10 @@
     margin: 0 8px 8px;
   }
 
+  .recent-search-posts {
+    grid-template-columns: 1fr;
+  }
+
   .bottom-nav-item span {
     font-size: 0.69rem;
   }
@@ -1930,6 +1934,7 @@
 
 .recent-search-posts {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 
