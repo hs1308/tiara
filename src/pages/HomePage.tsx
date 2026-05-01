@@ -91,13 +91,12 @@ function getBestPostForProduct(
 const NEEDS_YOU_TYPES = ['Rec Request', 'Skin & Hair Help']
 const NEEDS_YOU_TERMS = ['pigmentation', 'acne', 'combination', 'frizz', 'dry', 'sunscreen', 'moisturiser', 'dark circle', 'oily', 'sensitive', 'hair', 'skin']
 
-function getNeedsYouPosts(posts: Post[], currentUserId: string, excludeIds: Set<string>) {
+function getNeedsYouPosts(posts: Post[], currentUserId: string) {
   return posts
     .filter((post) => {
-      if (excludeIds.has(post.id)) return false
       if (post.authorId === currentUserId) return false
       if (!NEEDS_YOU_TYPES.includes(post.type)) return false
-      if (post.commentCount >= 5) return false
+      if (post.commentCount >= 50) return false
       const haystack = [
         post.title, post.description,
         ...(Array.isArray(post.tags) ? post.tags : []),
@@ -128,7 +127,7 @@ export function HomePage() {
   const communityProducts = getCommunityProducts(products, contextualPostIds)
 
   // Module 3
-  const needsYouPosts = getNeedsYouPosts(posts, demoUserId, contextualPostIds)
+  const needsYouPosts = getNeedsYouPosts(posts, demoUserId)
   const [replies, setReplies] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState<Record<string, string>>({})
 
