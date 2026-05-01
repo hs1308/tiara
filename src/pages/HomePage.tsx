@@ -405,10 +405,7 @@ export function HomePage() {
 
       {/* ── Module 4: New launches ── */}
       {(() => {
-        // newLaunch flag may not exist in Supabase yet — merge from mockProducts as fallback
-        const newLaunchIds = new Set(
-          mockProducts.filter((p) => p.newLaunch).map((p) => p.id)
-        )
+        const newLaunchIds = new Set(mockProducts.filter((p) => p.newLaunch).map((p) => p.id))
         const newLaunches = products.filter((p) => p.newLaunch || newLaunchIds.has(p.id))
         if (!newLaunches.length) return null
         return (
@@ -419,49 +416,96 @@ export function HomePage() {
                 <h2>What the community is saying about new launches</h2>
               </div>
             </div>
-            <div className="new-launches-rail">
+
+            <div className="nl2-grid">
               {newLaunches.map((product) => {
-                const topPost = [...posts]
+                // Get up to 2 posts or comments mentioning this product
+                const productPosts = [...posts]
                   .filter((p) => p.productId === product.id)
-                  .sort((a, b) => b.upvotes - a.upvotes)[0]
-                const topComment = !topPost
-                  ? allComments
-                      .filter((c) => {
-                        const parent = posts.find((p) => p.id === c.postId)
-                        return parent?.productId === product.id
-                      })
-                      .sort((a, b) => b.upvotes - a.upvotes)[0]
-                  : null
-                // Fall back to product description so card always shows
-                const quote = topPost?.title ?? topComment?.body ?? product.description
-                const discussionCount = product.discussionCount
+                  .sort((a, b) => b.upvotes - a.upvotes)
+                const productComments = allComments
+                  .filter((c) => {
+                    const parent = posts.find((p) => p.id === c.postId)
+                    return parent?.productId === product.id && !c.body.startsWith('AI_SUMMARY')
+                  })
+                  .sort((a, b) => b.upvotes - a.upvotes)
+
+                // Build up to 2 opinion items — prefer posts, fill with comments
+                type Opinion =
+                  | { kind: 'post'; post: Post }
+                  | { kind: 'comment'; comment: Comment; post: Post }
+
+                const opinions: Opinion[] = []
+                for (const p of productPosts.slice(0, 2)) {
+                  opinions.push({ kind: 'post', post: p })
+                }
+                if (opinions.length < 2) {
+                  for (const c of productComments) {
+                    if (opinions.length >= 2) break
+                    const parent = posts.find((p) => p.id === c.postId)
+                    if (parent) opinions.push({ kind: 'comment', comment: c, post: parent })
+                  }
+                }
+
+                // Key ingredients — show first 3
+                const ingredients = Array.isArray(product.ingredients)
+                  ? product.ingredients.slice(0, 3)
+                  : []
 
                 return (
-                  <Link
-                    key={product.id}
-                    to={`/product/${product.id}`}
-                    className="new-launch-card"
-                  >
-                    <div className="new-launch-image-wrap">
-                      <img
-                        src={product.heroImage}
-                        alt={product.name}
-                        className="new-launch-image"
-                      />
-                      <span className="new-launch-badge">New launch</span>
+                  <div key={product.id} className="nl2-card">
+                    {/* Product header */}
+                    <Link to={`/product/${product.id}`} className="nl2-product-header">
+                      <img src={product.heroImage} alt={product.name} className="nl2-product-image" />
+                      <div className="nl2-product-info">
+                        <div className="nl2-product-top">
+                          <span className="eyebrow">{product.brand}</span>
+                          <span className="new-launch-badge nl2-badge">New</span>
+                        </div>
+                        <strong className="nl2-product-name">{product.name}</strong>
+                        <p className="nl2-product-desc">{product.description.length > 80 ? product.description.slice(0, 80) + '…' : product.description}</p>
+                        {ingredients.length > 0 && (
+                          <p className="nl2-ingredients">{ingredients.join(' · ')}</p>
+                        )}
+                        <span className="nl2-sentiment">
+                          {product.communityScore}/10 community score
+                        </span>
+                      </div>
+                    </Link>
+
+                    {/* Divider */}
+                    <div className="nl2-divider" />
+
+                    {/* Opinions */}
+                    <div className="nl2-opinions">
+                      {opinions.length > 0 ? opinions.map((op, i) => {
+                        const authorId = op.kind === 'post' ? op.post.authorId : op.comment.authorId
+                        const threadId = op.kind === 'post' ? op.post.id : op.post.id
+                        const body = op.kind === 'post' ? op.post.title : op.comment.body
+                        const author = users.find((u) => u.id === authorId)
+                        return (
+                          <Link key={i} to={`/feed/${threadId}`} className="nl2-opinion">
+                            <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+                            <div className="nl2-opinion-body">
+                              <span className="nl2-opinion-author">{author?.name}</span>
+                              <p className="nl2-opinion-text">{body.length > 100 ? body.slice(0, 100) + '…' : body}</p>
+                            </div>
+                          </Link>
+                        )
+                      }) : (
+                        <p className="nl2-no-opinions">Be the first to share your thoughts.</p>
+                      )}
                     </div>
-                    <div className="new-launch-body">
-                      <span className="eyebrow">{product.brand}</span>
-                      <strong className="new-launch-name">{product.name}</strong>
-                      <p className="new-launch-quote">
-                        &ldquo;{quote.length > 100 ? quote.slice(0, 100) + '…' : quote}&rdquo;
-                      </p>
-                      <span className="new-launch-count">
-                        <MessageCircle size={12} />
-                        {discussionCount} discussing
-                      </span>
-                    </div>
-                  </Link>
+
+                    {/* Footer */}
+                    <Link
+                      to={`/feed?product=${product.id}`}
+                      className="nl2-see-more"
+                    >
+                      <MessageCircle size={13} />
+                      See other opinions
+                    </Link>
+                  </div>
                 )
               })}
             </div>

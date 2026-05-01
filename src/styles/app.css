@@ -2254,62 +2254,66 @@
   opacity: 0.75;
 }
 
-/* ── Module 4: New launches ── */
+/* ── Module 4 v2: New launch cards ── */
 
-.new-launches-rail {
+.nl2-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
 
-.new-launch-card {
-  display: grid;
-  text-decoration: none;
-  border: 1px solid rgba(23, 50, 44, 0.08);
+.nl2-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid rgba(23, 50, 44, 0.09);
   border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.85);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.new-launch-card:hover {
-  border-color: rgba(15, 79, 70, 0.2);
-  box-shadow: 0 4px 16px rgba(15, 79, 70, 0.08);
+.nl2-product-header {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  text-decoration: none;
+  transition: background 150ms ease;
 }
 
-.new-launch-image-wrap {
-  position: relative;
+.nl2-product-header:hover {
+  background: rgba(226, 239, 232, 0.3);
 }
 
-.new-launch-image {
-  width: 100%;
-  aspect-ratio: 1 / 1;
+.nl2-product-image {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
   object-fit: cover;
-  display: block;
+  flex-shrink: 0;
 }
 
-.new-launch-badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: var(--ink);
-  color: white;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 999px;
+.nl2-product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
 }
 
-.new-launch-body {
-  display: grid;
+.nl2-product-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 6px;
-  padding: 14px 16px;
 }
 
-.new-launch-name {
-  font-size: 0.9rem;
+.nl2-badge {
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+
+.nl2-product-name {
+  font-size: 0.88rem;
   color: var(--ink);
   line-height: 1.3;
   display: -webkit-box;
@@ -2318,30 +2322,119 @@
   overflow: hidden;
 }
 
-.new-launch-quote {
-  font-size: 0.84rem;
+.nl2-product-desc {
+  font-size: 0.8rem;
   color: var(--muted);
-  font-style: italic;
-  line-height: 1.5;
   margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.nl2-ingredients {
+  font-size: 0.76rem;
+  color: var(--accent);
+  margin: 0;
+  font-weight: 500;
+}
+
+.nl2-sentiment {
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.nl2-divider {
+  height: 1px;
+  background: rgba(23, 50, 44, 0.07);
+  margin: 0 16px;
+}
+
+.nl2-opinions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1;
+}
+
+.nl2-opinion {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(23, 50, 44, 0.06);
+  transition: background 150ms ease;
+}
+
+.nl2-opinion:last-child {
+  border-bottom: none;
+}
+
+.nl2-opinion:hover {
+  background: rgba(226, 239, 232, 0.25);
+}
+
+.nl2-opinion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.nl2-opinion-author {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.nl2-opinion-text {
+  font-size: 0.86rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
 
-.new-launch-count {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.8rem;
+.nl2-no-opinions {
+  font-size: 0.86rem;
   color: var(--muted);
-  margin-top: 2px;
+  padding: 16px;
+  margin: 0;
 }
 
-@media (max-width: 759px) {
-  .new-launches-rail {
+.nl2-see-more {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 16px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  border-top: 1px solid rgba(23, 50, 44, 0.07);
+  background: rgba(248, 246, 242, 0.6);
+  transition: background 150ms ease;
+}
+
+.nl2-see-more:hover {
+  background: rgba(226, 239, 232, 0.5);
+}
+
+@media (max-width: 900px) {
+  .nl2-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .nl2-grid {
+    grid-template-columns: 1fr;
   }
 }
 
