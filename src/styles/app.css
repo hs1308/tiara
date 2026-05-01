@@ -2426,6 +2426,125 @@
   background: rgba(226, 239, 232, 0.5);
 }
 
+/* ── Community topics carousel ── */
+
+.community-topics-section {
+  gap: 16px;
+  overflow: hidden;
+}
+
+.community-topics-rail {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.community-topics-rail::-webkit-scrollbar {
+  display: none;
+}
+
+.topic-card {
+  flex-shrink: 0;
+  width: 280px;
+  scroll-snap-align: start;
+  border: 1.5px solid;
+  border-radius: 20px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.topic-card-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.topic-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.topic-post-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.topic-post-item:hover {
+  opacity: 0.75;
+}
+
+.topic-post-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topic-post-author {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.topic-post-title {
+  font-size: 0.88rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.topic-post-meta {
+  font-size: 0.76rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.topic-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.topic-action-btn {
+  flex: 1;
+  text-align: center;
+  padding: 8px 10px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+  white-space: nowrap;
+}
+
+.topic-action-btn:hover {
+  opacity: 0.8;
+}
+
+.topic-see-more {
+  border: 1.5px solid;
+  background: transparent;
+}
+
+.topic-ask {
+  border: 1.5px solid transparent;
+}
+
 @media (max-width: 900px) {
   .nl2-grid {
     grid-template-columns: repeat(2, 1fr);

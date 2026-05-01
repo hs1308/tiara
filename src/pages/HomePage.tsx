@@ -2,10 +2,9 @@ import { MessageCircle, Search, Send, ThumbsUp } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FaceScanModal } from '../components/ui/FaceScanModal'
-import { PostCard } from '../components/ui/PostCard'
 import { useCurrentUser, useComments, useCreateComment, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
 import { demoUserId, mockProducts } from '../data/mockData'
-import type { Comment, Post, Product } from '../types'
+import type { Comment, InterestCategory, Post, Product } from '../types'
 
 const CONTEXTUAL_TOPIC = 'dark circles'
 const CONTEXTUAL_TERMS = [
@@ -119,7 +118,6 @@ export function HomePage() {
 
   const contextualPosts = getContextualPosts(posts, products)
   const contextualPostIds = new Set(contextualPosts.map((post) => post.id))
-  const livePosts = posts.filter((post) => !contextualPostIds.has(post.id)).slice(0, 3)
   const firstName = user?.name?.split(' ')[0] ?? 'there'
   void firstName
 
@@ -382,26 +380,111 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="section-block">
-        <div className="section-head">
-          <div>
-            <h2>What the community is talking about</h2>
-          </div>
-          <Link to="/feed" className="inline-link">
-            Go to feed
-          </Link>
-        </div>
-        <div className="feed-stack">
-          {livePosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              author={users.find((item) => item.id === post.authorId)}
-              product={products.find((item) => item.id === post.productId)}
-            />
-          ))}
-        </div>
-      </section>
+      {/* ── What the community is talking about ── */}
+      {(() => {
+        const CATEGORY_COLOURS: Record<string, { bg: string; border: string; label: string }> = {
+          Skincare:  { bg: '#e8f5e9', border: '#a5d6a7', label: '#2e7d32' },
+          Makeup:    { bg: '#fff3e0', border: '#ffcc80', label: '#e65100' },
+          Haircare:  { bg: '#e3f2fd', border: '#90caf9', label: '#1565c0' },
+          Nailcare:  { bg: '#fce4ec', border: '#f48fb1', label: '#880e4f' },
+          Fragrance: { bg: '#f3e5f5', border: '#ce93d8', label: '#6a1b9a' },
+          'Lip care':{ bg: '#fff8e1', border: '#ffe082', label: '#f57f17' },
+        }
+
+        // User's interests drive the order, fall back to all categories
+        const userInterests: InterestCategory[] = (user?.interests?.length
+          ? user.interests
+          : ['Skincare', 'Makeup', 'Haircare', 'Nailcare', 'Fragrance', 'Lip care']) as InterestCategory[]
+
+        // For each category, find the top 2 posts by upvotes
+        const categoryCards = userInterests
+          .map((cat) => {
+            const categoryTerms = [cat.toLowerCase(), ...{
+              Skincare:  ['skincare', 'skin', 'serum', 'moisturiser', 'sunscreen', 'toner', 'cleanser'],
+              Makeup:    ['makeup', 'foundation', 'concealer', 'lipstick', 'blush', 'eyeshadow', 'mascara'],
+              Haircare:  ['hair', 'haircare', 'frizz', 'shampoo', 'conditioner', 'scalp', 'hair fall'],
+              Nailcare:  ['nail', 'nails', 'nail polish', 'nailcare', 'manicure'],
+              Fragrance: ['fragrance', 'perfume', 'mist', 'scent', 'attar'],
+              'Lip care':['lip', 'lips', 'lip balm', 'lip care', 'lip oil'],
+            }[cat]]
+
+            const catPosts = posts
+              .filter((post) => {
+                const haystack = [
+                  post.title, post.description, post.type, post.brand,
+                  ...(Array.isArray(post.tags) ? post.tags : []),
+                  products.find((p) => p.id === post.productId)?.category ?? '',
+                ].join(' ').toLowerCase()
+                return categoryTerms.some((t) => haystack.includes(t))
+              })
+              .sort((a, b) => b.upvotes - a.upvotes)
+              .slice(0, 2)
+
+            return { cat, posts: catPosts, colour: CATEGORY_COLOURS[cat] }
+          })
+          .filter((c) => c.posts.length > 0)
+
+        if (!categoryCards.length) return null
+
+        return (
+          <section className="section-block community-topics-section">
+            <div className="section-head">
+              <div>
+                <h2>What the community is talking about</h2>
+              </div>
+              <Link to="/feed" className="inline-link">Go to feed</Link>
+            </div>
+
+            <div className="community-topics-rail">
+              {categoryCards.map(({ cat, posts: catPosts, colour }) => (
+                <div
+                  key={cat}
+                  className="topic-card"
+                  style={{
+                    background: colour.bg,
+                    borderColor: colour.border,
+                  } as React.CSSProperties}
+                >
+                  <h3 className="topic-card-title" style={{ color: colour.label }}>{cat}</h3>
+
+                  <div className="topic-posts">
+                    {catPosts.map((post) => {
+                      const author = users.find((u) => u.id === post.authorId)
+                      return (
+                        <Link key={post.id} to={`/feed/${post.id}`} className="topic-post-item">
+                          <img src={author?.avatar} alt={author?.name} className="avatar-xs" />
+                          <div className="topic-post-body">
+                            <span className="topic-post-author">{author?.name}</span>
+                            <p className="topic-post-title">{post.title}</p>
+                            <span className="topic-post-meta">{post.commentCount} comments</span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+
+                  <div className="topic-card-actions">
+                    <Link
+                      to={`/feed?care=${encodeURIComponent(cat)}`}
+                      className="topic-action-btn topic-see-more"
+                      style={{ borderColor: colour.border, color: colour.label }}
+                    >
+                      See more
+                    </Link>
+                    <Link
+                      to={`/create?type=Rec%20Request`}
+                      className="topic-action-btn topic-ask"
+                      style={{ background: colour.border, color: colour.label }}
+                    >
+                      Ask a question
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      })()}
 
       {/* ── Module 4: New launches ── */}
       {(() => {
