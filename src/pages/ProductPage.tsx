@@ -1,6 +1,7 @@
 import { ArrowRight, Bell, BellOff, MessageCircle, Pencil, ShoppingBag, Star, ThumbsUp } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { AddReviewModal } from '../components/ui/AddReviewModal'
 import { PostCard } from '../components/ui/PostCard'
 import { useAddToCart, useComments, usePosts, useProduct, useProducts, useUsers } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
@@ -38,6 +39,7 @@ export function ProductPage() {
 
   const [followed, setFollowed] = useState(false)
   const [communityTab, setCommunityTab] = useState<CommunityTab>('posts')
+  const [showReviewModal, setShowReviewModal] = useState(false)
 
   if (!product) {
     return <div className="empty-state">We could not find that product.</div>
@@ -286,9 +288,7 @@ export function ProductPage() {
             <button
               type="button"
               className="pdp-create-prompt"
-              onClick={() => navigate(`/create?productId=${product.id}&type=Product%20Talk`, {
-                state: { backgroundLocation: location },
-              })}
+              onClick={() => setShowReviewModal(true)}
             >
               <Pencil size={14} />
               Write a review…
@@ -376,6 +376,13 @@ export function ProductPage() {
             })}
           </div>
         </section>
+      )}
+
+      {showReviewModal && (
+        <AddReviewModal
+          preselectedProduct={product}
+          onClose={() => setShowReviewModal(false)}
+        />
       )}
 
     </div>

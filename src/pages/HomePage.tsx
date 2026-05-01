@@ -1,7 +1,8 @@
-import { MessageCircle, Search, Send, ThumbsUp } from 'lucide-react'
+import { MessageCircle, Search, Send, Star, ThumbsUp } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FaceScanModal } from '../components/ui/FaceScanModal'
+import { AddReviewModal } from '../components/ui/AddReviewModal'
 import { useCurrentUser, useComments, useCreateComment, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
 import { demoUserId, mockProducts } from '../data/mockData'
 import type { Comment, InterestCategory, Post, Product } from '../types'
@@ -128,6 +129,9 @@ export function HomePage() {
   const needsYouPosts = getNeedsYouPosts(posts, demoUserId)
   const [replies, setReplies] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState<Record<string, string>>({})
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [reviewDrafts, setReviewDrafts] = useState<Record<string, string>>({})
+  const [reviewSubmitted, setReviewSubmitted] = useState<Record<string, string>>({})
 
   function handleReplyChange(postId: string, value: string) {
     setReplies((prev) => ({ ...prev, [postId]: value }))
@@ -486,6 +490,129 @@ export function HomePage() {
         )
       })()}
 
+      {/* ── Review carousel ── */}
+      {(() => {
+        const reviewPosts = posts.filter((p) => p.type === 'Review' && p.rating && p.productId)
+        if (!reviewPosts.length) return null
+        return (
+          <section className="section-block">
+            <div className="section-head">
+              <div>
+                <span className="section-kicker">What people are rating</span>
+                <h2>Product reviews from the community</h2>
+              </div>
+              <button
+                type="button"
+                className="primary-button"
+                style={{ whiteSpace: 'nowrap', fontSize: '0.86rem', padding: '8px 16px' }}
+                onClick={() => setShowReviewModal(true)}
+              >
+                <Star size={14} /> Add a review
+              </button>
+            </div>
+
+            <div className="review-carousel">
+              {reviewPosts.map((reviewPost) => {
+                const product = products.find((p) => p.id === reviewPost.productId)
+                const reviewer = users.find((u) => u.id === reviewPost.authorId)
+                // Top comment on this review from someone else
+                const topComment = allComments
+                  .filter((c) => c.postId === reviewPost.id && c.authorId !== reviewPost.authorId)
+                  .sort((a, b) => b.upvotes - a.upvotes)[0]
+                const commentAuthor = users.find((u) => u.id === topComment?.authorId)
+                const hasSubmitted = !!reviewSubmitted[reviewPost.id]
+
+                return (
+                  <div key={reviewPost.id} className="review-card">
+                    {/* Product strip */}
+                    {product && (
+                      <Link to={`/product/${product.id}`} className="review-card-product">
+                        <img src={product.heroImage} alt={product.name} className="review-card-product-img" />
+                        <div>
+                          <span className="eyebrow">{product.brand}</span>
+                          <strong className="review-card-product-name">{product.name}</strong>
+                        </div>
+                      </Link>
+                    )}
+
+                    {/* Rating */}
+                    <div className="review-card-stars">
+                      {[1,2,3,4,5].map((s) => (
+                        <Star
+                          key={s}
+                          size={15}
+                          fill={s <= (reviewPost.rating ?? 0) ? '#f59e0b' : 'none'}
+                          color={s <= (reviewPost.rating ?? 0) ? '#f59e0b' : '#d1d5db'}
+                          strokeWidth={1.5}
+                        />
+                      ))}
+                      <span className="review-card-rating-label">{reviewPost.rating}/5</span>
+                    </div>
+
+                    {/* Review text */}
+                    <Link to={`/feed/${reviewPost.id}`} className="review-card-body">
+                      <div className="review-card-reviewer">
+                        <img src={reviewer?.avatar} alt={reviewer?.name} className="avatar-xs" />
+                        <span>{reviewer?.name}</span>
+                      </div>
+                      <p className="review-card-text">
+                        {reviewPost.description.length > 120
+                          ? reviewPost.description.slice(0, 120) + '…'
+                          : reviewPost.description}
+                      </p>
+                    </Link>
+
+                    {/* Top comment */}
+                    {topComment && (
+                      <Link to={`/feed/${reviewPost.id}`} className="review-card-comment">
+                        <img src={commentAuthor?.avatar} alt={commentAuthor?.name} className="avatar-xs" />
+                        <p>{topComment.body.length > 80 ? topComment.body.slice(0, 80) + '…' : topComment.body}</p>
+                      </Link>
+                    )}
+
+                    {/* Inline comment input */}
+                    <div className="review-card-reply">
+                      {hasSubmitted ? (
+                        <p className="review-card-submitted">✓ Comment added
+                          <Link to={`/feed/${reviewPost.id}`} className="needs-you-join-nudge" style={{ marginLeft: 8 }}>
+                            View thread
+                          </Link>
+                        </p>
+                      ) : (
+                        <div className="needs-you-reply-row">
+                          <img src={user?.avatar} alt={user?.name} className="avatar-xs" />
+                          <textarea
+                            className="needs-you-textarea"
+                            rows={2}
+                            placeholder="Add a comment…"
+                            value={reviewDrafts[reviewPost.id] ?? ''}
+                            onChange={(e) => setReviewDrafts((prev) => ({ ...prev, [reviewPost.id]: e.target.value }))}
+                          />
+                          <button
+                            type="button"
+                            className="needs-you-send"
+                            disabled={!reviewDrafts[reviewPost.id]?.trim() || createComment.isPending}
+                            onClick={async () => {
+                              const body = reviewDrafts[reviewPost.id]?.trim()
+                              if (!body) return
+                              await createComment.mutateAsync({ postId: reviewPost.id, authorId: demoUserId, body, parentId: null })
+                              setReviewSubmitted((prev) => ({ ...prev, [reviewPost.id]: body }))
+                              setReviewDrafts((prev) => ({ ...prev, [reviewPost.id]: '' }))
+                            }}
+                          >
+                            <Send size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })()}
+
       {/* ── Module 4: New launches ── */}
       {(() => {
         const newLaunchIds = new Set(mockProducts.filter((p) => p.newLaunch).map((p) => p.id))
@@ -610,10 +737,15 @@ export function HomePage() {
         <FaceScanModal
           onClose={() => setShowFaceScan(false)}
           onComplete={(_results) => {
-            // Results are hardcoded in FaceScanModal — profile update is visual demo only
             setShowFaceScan(false)
             navigate('/profile')
           }}
+        />
+      )}
+
+      {showReviewModal && (
+        <AddReviewModal
+          onClose={() => setShowReviewModal(false)}
         />
       )}
     </div>

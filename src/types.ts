@@ -12,6 +12,7 @@ export type PostType =
   | 'Rec Request'
   | 'Routine Check'
   | 'Look & Feel'
+  | 'Review'
 
 export type FeedSort = 'New' | 'Trending' | 'Popular'
 
@@ -70,6 +71,7 @@ export interface Post {
   commentCount: number
   createdAt: string
   isPinnedSummary?: boolean
+  rating?: number
 }
 
 export interface Comment {

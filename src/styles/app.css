@@ -2809,6 +2809,248 @@
   color: var(--muted);
 }
 
+/* ── Review carousel (homepage) ── */
+
+.review-carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.review-carousel::-webkit-scrollbar { display: none; }
+
+.review-card {
+  flex-shrink: 0;
+  width: 300px;
+  scroll-snap-align: start;
+  border: 1px solid rgba(23, 50, 44, 0.09);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.review-card-product {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(23, 50, 44, 0.07);
+  transition: background 150ms ease;
+}
+
+.review-card-product:hover { background: rgba(226, 239, 232, 0.25); }
+
+.review-card-product-img {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.review-card-product-name {
+  font-size: 0.86rem;
+  color: var(--ink);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.review-card-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 16px 4px;
+}
+
+.review-card-rating-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-left: 4px;
+}
+
+.review-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 16px 12px;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.review-card-body:hover { background: rgba(226, 239, 232, 0.15); }
+
+.review-card-reviewer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.review-card-text {
+  font-size: 0.88rem;
+  color: var(--ink);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.review-card-comment {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(23, 50, 44, 0.07);
+  text-decoration: none;
+  background: rgba(248, 246, 242, 0.5);
+  transition: background 150ms ease;
+}
+
+.review-card-comment:hover { background: rgba(226, 239, 232, 0.3); }
+
+.review-card-comment p {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.review-card-reply {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(23, 50, 44, 0.07);
+}
+
+.review-card-submitted {
+  display: flex;
+  align-items: center;
+  font-size: 0.84rem;
+  color: var(--accent);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* ── AddReviewModal specific ── */
+
+.add-review-modal {
+  gap: 18px;
+}
+
+.add-review-header {
+  padding-top: 4px;
+}
+
+.add-review-header h2 {
+  font-size: 1.3rem;
+  margin: 4px 0 0;
+}
+
+.review-preselected-product {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: rgba(248, 246, 242, 0.8);
+  border-radius: 16px;
+  border: 1px solid rgba(23, 50, 44, 0.08);
+}
+
+.review-product-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.review-product-name {
+  font-size: 0.92rem;
+  color: var(--ink);
+  display: block;
+  margin-top: 2px;
+}
+
+.review-rating-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.review-rating-label {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.review-stars {
+  display: flex;
+  gap: 4px;
+}
+
+.review-star-btn {
+  border: none;
+  background: transparent;
+  padding: 2px;
+  cursor: pointer;
+  transition: transform 120ms ease;
+}
+
+.review-star-btn:hover { transform: scale(1.15); }
+
+.review-rating-text {
+  font-size: 0.84rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.review-photo-nudge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1.5px dashed rgba(23, 50, 44, 0.15);
+  border-radius: 12px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.88rem;
+  color: var(--muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ── Post review stars in feed ── */
+
+.post-review-stars {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: -2px 0 2px;
+}
+
+.post-review-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #92400e;
+  margin-left: 4px;
+}
+
 @media (max-width: 900px) {
   .nl2-grid {
     grid-template-columns: repeat(2, 1fr);
