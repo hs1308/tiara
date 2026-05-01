@@ -2105,6 +2105,155 @@
   opacity: 0.4;
 }
 
+/* ── Module 3: Your community needs you ── */
+
+.needs-you-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.needs-you-card {
+  border: 1px solid rgba(23, 50, 44, 0.09);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  overflow: hidden;
+  display: grid;
+}
+
+.needs-you-post-link {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px 14px;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.needs-you-post-link:hover {
+  background: rgba(226, 239, 232, 0.25);
+}
+
+.needs-you-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.needs-you-author {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--ink);
+  flex: 1;
+}
+
+.needs-you-type {
+  font-size: 0.74rem;
+}
+
+.needs-you-title {
+  font-size: 0.96rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.needs-you-reply-area {
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(23, 50, 44, 0.07);
+  background: rgba(248, 246, 242, 0.5);
+}
+
+.needs-you-reply-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.needs-you-textarea {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(23, 50, 44, 0.12);
+  background: white;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  resize: none;
+  outline: none;
+  line-height: 1.5;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.needs-you-textarea:focus {
+  border-color: rgba(15, 79, 70, 0.35);
+  box-shadow: 0 0 0 3px rgba(15, 79, 70, 0.08);
+}
+
+.needs-you-send {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--ink);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.needs-you-send:hover:not(:disabled) {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.needs-you-send:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.needs-you-submitted {
+  display: grid;
+  gap: 10px;
+}
+
+.needs-you-submitted-comment {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.needs-you-submitted-comment p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.5;
+  background: rgba(226, 239, 232, 0.55);
+  padding: 9px 13px;
+  border-radius: 12px;
+  flex: 1;
+}
+
+.needs-you-join-nudge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+  padding-left: 2px;
+}
+
+.needs-you-join-nudge:hover {
+  opacity: 0.75;
+}
+
 @media (max-width: 759px) {
   .community-product-row {
     grid-template-columns: 160px 1fr;

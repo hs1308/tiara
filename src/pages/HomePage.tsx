@@ -1,9 +1,10 @@
-import { MessageCircle, Search, ThumbsUp } from 'lucide-react'
+import { MessageCircle, Search, Send, ThumbsUp } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FaceScanModal } from '../components/ui/FaceScanModal'
 import { PostCard } from '../components/ui/PostCard'
-import { useCurrentUser, useComments, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
+import { useCurrentUser, useComments, useCreateComment, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
+import { demoUserId } from '../data/mockData'
 import type { Comment, Post, Product } from '../types'
 
 const CONTEXTUAL_TOPIC = 'dark circles'
@@ -86,6 +87,27 @@ function getBestPostForProduct(
   return fallback ? { type: 'post', item: fallback } : null
 }
 
+// Module 3 helper
+const NEEDS_YOU_TYPES = ['Rec Request', 'Skin & Hair Help']
+const NEEDS_YOU_TERMS = ['pigmentation', 'acne', 'combination', 'frizz', 'dry', 'sunscreen', 'moisturiser', 'dark circle', 'oily', 'sensitive', 'hair', 'skin']
+
+function getNeedsYouPosts(posts: Post[], currentUserId: string, excludeIds: Set<string>) {
+  return posts
+    .filter((post) => {
+      if (excludeIds.has(post.id)) return false
+      if (post.authorId === currentUserId) return false
+      if (!NEEDS_YOU_TYPES.includes(post.type)) return false
+      if (post.commentCount >= 5) return false
+      const haystack = [
+        post.title, post.description,
+        ...(Array.isArray(post.tags) ? post.tags : []),
+      ].join(' ').toLowerCase()
+      return NEEDS_YOU_TERMS.some((t) => haystack.includes(t))
+    })
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3)
+}
+
 export function HomePage() {
   const navigate = useNavigate()
   const [showFaceScan, setShowFaceScan] = useState(false)
@@ -94,6 +116,7 @@ export function HomePage() {
   const { data: products = [] } = useProducts()
   const { data: posts = [] } = usePosts()
   const { data: allComments = [] } = useComments()
+  const createComment = useCreateComment()
 
   const contextualPosts = getContextualPosts(posts, products)
   const contextualPostIds = new Set(contextualPosts.map((post) => post.id))
@@ -101,8 +124,25 @@ export function HomePage() {
   const firstName = user?.name?.split(' ')[0] ?? 'there'
   void firstName
 
-  // Module 2: products people are talking about
+  // Module 2
   const communityProducts = getCommunityProducts(products, contextualPostIds)
+
+  // Module 3
+  const needsYouPosts = getNeedsYouPosts(posts, demoUserId, contextualPostIds)
+  const [replies, setReplies] = useState<Record<string, string>>({})
+  const [submitted, setSubmitted] = useState<Record<string, string>>({})
+
+  function handleReplyChange(postId: string, value: string) {
+    setReplies((prev) => ({ ...prev, [postId]: value }))
+  }
+
+  async function handleReplySubmit(postId: string) {
+    const body = replies[postId]?.trim()
+    if (!body) return
+    await createComment.mutateAsync({ postId, authorId: demoUserId, body, parentId: null })
+    setSubmitted((prev) => ({ ...prev, [postId]: body }))
+    setReplies((prev) => ({ ...prev, [postId]: '' }))
+  }
 
   return (
     <div className="page-stack">
@@ -242,6 +282,100 @@ export function HomePage() {
                       <span>See what the community is saying →</span>
                     </Link>
                   )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ── Module 3: Your community needs you ── */}
+      {needsYouPosts.length > 0 && (
+        <section className="section-block needs-you-module">
+          <div className="section-head">
+            <div>
+              <span className="section-kicker">Your community needs you</span>
+              <h2>These people could use your help</h2>
+            </div>
+            <Link to="/feed?sort=New" className="inline-link">Go to feed</Link>
+          </div>
+
+          <div className="needs-you-stack">
+            {needsYouPosts.map((post) => {
+              const author = users.find((u) => u.id === post.authorId)
+              const hasSubmitted = !!submitted[post.id]
+              const tags = Array.isArray(post.tags) ? post.tags : []
+
+              return (
+                <div key={post.id} className="needs-you-card">
+                  {/* Post header — tappable to thread */}
+                  <Link to={`/feed/${post.id}`} className="needs-you-post-link">
+                    <div className="needs-you-meta">
+                      <img src={author?.avatar} alt={author?.name} className="avatar-xs" />
+                      <span className="needs-you-author">{author?.name}</span>
+                      <span className="tag-pill needs-you-type">{post.type}</span>
+                    </div>
+                    <p className="needs-you-title">{post.title}</p>
+                    {tags.length > 0 && (
+                      <div className="tag-row" style={{ marginTop: '6px' }}>
+                        {tags.slice(0, 3).map((tag) => (
+                          <span key={tag} className="tag-pill">{tag}</span>
+                        ))}
+                      </div>
+                    )}
+                  </Link>
+
+                  {/* Inline reply */}
+                  <div className="needs-you-reply-area">
+                    {hasSubmitted ? (
+                      <div className="needs-you-submitted">
+                        <div className="needs-you-submitted-comment">
+                          <img
+                            src={user?.avatar}
+                            alt={user?.name}
+                            className="avatar-xs"
+                          />
+                          <p>{submitted[post.id]}</p>
+                        </div>
+                        <Link
+                          to={`/feed/${post.id}`}
+                          className="needs-you-join-nudge"
+                        >
+                          <MessageCircle size={13} />
+                          Join the full discussion
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="needs-you-reply-row">
+                        <img
+                          src={user?.avatar}
+                          alt={user?.name}
+                          className="avatar-xs"
+                        />
+                        <textarea
+                          className="needs-you-textarea"
+                          placeholder="Share what works for you…"
+                          rows={2}
+                          value={replies[post.id] ?? ''}
+                          onChange={(e) => handleReplyChange(post.id, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                              handleReplySubmit(post.id)
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="needs-you-send"
+                          disabled={!replies[post.id]?.trim() || createComment.isPending}
+                          onClick={() => handleReplySubmit(post.id)}
+                          aria-label="Send reply"
+                        >
+                          <Send size={15} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )
             })}
