@@ -1,20 +1,28 @@
-import { ArrowRight, MessageCircle, ShoppingBag } from 'lucide-react'
+import { ArrowRight, Bell, BellOff, MessageCircle, Pencil, ShoppingBag, Star, ThumbsUp } from 'lucide-react'
+import { useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PostCard } from '../components/ui/PostCard'
-import { useAddToCart, usePosts, useProduct, useProducts, useUsers } from '../hooks/useTiaraData'
+import { useAddToCart, useComments, usePosts, useProduct, useProducts, useUsers } from '../hooks/useTiaraData'
 import { formatCurrency } from '../lib/format'
 import type { Product } from '../types'
 
-function uniqueProducts(products: Product[]) {
-  return products.filter(
-    (product, index, list) => list.findIndex((item) => item.id === product.id) === index,
-  )
-}
+type CommunityTab = 'posts' | 'comments' | 'reviews'
 
-function fillProductRail(primary: Product[], fallback: Product[], currentProductId: string, limit = 4) {
-  return uniqueProducts([...primary, ...fallback])
-    .filter((product) => product.id !== currentProductId)
-    .slice(0, limit)
+// Mock reviews since we don't have a reviews table yet
+const MOCK_REVIEWS = [
+  { id: 'r1', authorName: 'Priya S.', skinType: 'Oily', rating: 5, body: 'Been using this for 3 months and my texture has genuinely improved. Pores look smaller and acne marks are fading.', date: '2026-04-20' },
+  { id: 'r2', authorName: 'Meera K.', skinType: 'Combination', rating: 4, body: 'Lightweight, no stinging, works well under sunscreen. Took 6 weeks to see results but worth it.', date: '2026-04-15' },
+  { id: 'r3', authorName: 'Ananya R.', skinType: 'Sensitive', rating: 4, body: 'Gentle enough for sensitive skin. Did not break me out which most actives do. Subtle but real results.', date: '2026-04-10' },
+]
+
+function StarRow({ rating }: { rating: number }) {
+  return (
+    <span className="pdp-star-row">
+      {[1,2,3,4,5].map((s) => (
+        <Star key={s} size={13} fill={s <= rating ? 'currentColor' : 'none'} />
+      ))}
+    </span>
+  )
 }
 
 export function ProductPage() {
@@ -23,27 +31,60 @@ export function ProductPage() {
   const location = useLocation()
   const { data: product } = useProduct(productId)
   const { data: posts = [] } = usePosts()
+  const { data: allComments = [] } = useComments()
   const { data: users = [] } = useUsers()
   const { data: allProducts = [] } = useProducts()
   const addToCart = useAddToCart()
+
+  const [followed, setFollowed] = useState(false)
+  const [communityTab, setCommunityTab] = useState<CommunityTab>('posts')
 
   if (!product) {
     return <div className="empty-state">We could not find that product.</div>
   }
 
-  const relatedPosts = posts.filter((post) => post.productId === product.id).slice(0, 3)
-  const brandMatches = allProducts.filter((p) => p.brand === product.brand && p.id !== product.id)
-  const categoryMatches = allProducts.filter((p) => p.category === product.category && p.id !== product.id)
-  const otherProducts = allProducts.filter((p) => p.id !== product.id)
-  const moreFromBrand = fillProductRail(brandMatches, [...categoryMatches, ...otherProducts], product.id)
-  const similarProducts = fillProductRail(
-    categoryMatches.filter((p) => p.brand !== product.brand),
-    otherProducts,
-    product.id,
-  )
+  // Community data
+  const productPosts = posts.filter((post) => post.productId === product.id)
+  const productComments = allComments.filter((c) => {
+    if (c.body.startsWith('AI_SUMMARY')) return false
+    const parent = posts.find((p) => p.id === c.postId)
+    return parent?.productId === product.id
+  })
+
+  // Alternate products recommended by community
+  // Find products in same category from other brands that have community posts
+  const alternates = allProducts
+    .filter((p) => p.id !== product.id && p.category === product.category && p.brand !== product.brand)
+    .sort((a, b) => b.communityScore - a.communityScore)
+    .slice(0, 3)
+
+  // For each alternate, get up to 3 top comments/post snippets
+  function getAlternateOpinions(p: Product) {
+    const pPosts = posts.filter((post) => post.productId === p.id).sort((a, b) => b.upvotes - a.upvotes)
+    const pComments = allComments
+      .filter((c) => {
+        const parent = posts.find((post) => post.id === c.postId)
+        return parent?.productId === p.id && !c.body.startsWith('AI_SUMMARY')
+      })
+      .sort((a, b) => b.upvotes - a.upvotes)
+
+    type Opinion = { authorId: string; text: string; threadId: string }
+    const opinions: Opinion[] = []
+    for (const post of pPosts.slice(0, 3)) {
+      opinions.push({ authorId: post.authorId, text: post.title, threadId: post.id })
+    }
+    for (const c of pComments) {
+      if (opinions.length >= 3) break
+      const parent = posts.find((post) => post.id === c.postId)
+      if (parent) opinions.push({ authorId: c.authorId, text: c.body, threadId: parent.id })
+    }
+    return opinions
+  }
 
   return (
     <div className="page-stack">
+
+      {/* ── Hero ── */}
       <section className="product-hero">
         <div className="gallery-block">
           <img src={product.gallery[0]} alt={product.name} className="product-hero-image" />
@@ -54,7 +95,20 @@ export function ProductPage() {
           </div>
         </div>
         <div className="product-summary">
-          <Link to={`/brand/${encodeURIComponent(product.brand)}`} className="section-kicker brand-link">{product.brand}</Link>
+          <div className="product-summary-toprow">
+            <Link to={`/brand/${encodeURIComponent(product.brand)}`} className="section-kicker brand-link">
+              {product.brand}
+            </Link>
+            <button
+              type="button"
+              className={`pdp-follow-btn${followed ? ' followed' : ''}`}
+              onClick={() => setFollowed((f) => !f)}
+              title={followed ? 'Unfollow product' : 'Follow product'}
+            >
+              {followed ? <BellOff size={16} /> : <Bell size={16} />}
+              {followed ? 'Following' : 'Follow'}
+            </button>
+          </div>
           <h1>{product.name}</h1>
           <p>{product.description}</p>
           <div className="price-stack">
@@ -91,44 +145,11 @@ export function ProductPage() {
         </div>
       </section>
 
-      <section className="section-block">
-        <div className="section-head">
-          <div>
-            <span className="section-kicker">What the community is saying</span>
-            <h2>Social proof, context, and the nuanced bits that star ratings miss</h2>
-          </div>
-          <Link to={`/feed?product=${product.id}`} className="inline-link">
-            See all discussions <ArrowRight size={15} />
-          </Link>
-        </div>
-        <div className="snapshot-panel">
-          <div className="snapshot-stat">
-            <strong>78%</strong>
-            <span>Positive sentiment</span>
-          </div>
-          <div className="snapshot-stat">
-            <strong>{product.discussionCount}</strong>
-            <span>Posts and comments</span>
-          </div>
-        </div>
-        <div className="feed-stack">
-          {relatedPosts.map((post) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              author={users.find((user) => user.id === post.authorId)}
-              product={product}
-              compact
-            />
-          ))}
-        </div>
-      </section>
-
+      {/* ── Product details (moved up) ── */}
       <section className="section-block">
         <div className="section-head">
           <div>
             <span className="section-kicker">Product details</span>
-            <h2>Ingredients, usage, and suitability for your profile</h2>
           </div>
         </div>
         <div className="details-grid">
@@ -155,57 +176,208 @@ export function ProductPage() {
         </div>
       </section>
 
+      {/* ── What the community is saying ── */}
       <section className="section-block">
-          <div className="section-head">
-            <div>
-              <span className="section-kicker">More from this brand</span>
-              <h2>
-                {brandMatches.length
-                  ? `Other ${product.brand} products on Tiara`
-                  : `Products shoppers compare with ${product.brand}`}
-              </h2>
-            </div>
-            <Link to={`/brand/${encodeURIComponent(product.brand)}`} className="inline-link">
-              View brand <ArrowRight size={15} />
-            </Link>
+        <div className="section-head">
+          <div>
+            <span className="section-kicker">What the community is saying</span>
+            <h2>Social proof, context, and the nuanced bits that star ratings miss</h2>
           </div>
-          <div className="product-rail">
-            {moreFromBrand.map((p) => (
-              <Link key={p.id} to={`/product/${p.id}`} className="mini-product-card">
-                <img src={p.heroImage} alt={p.name} className="mini-product-image" />
-                <div className="mini-product-info">
-                  <span className="mini-product-name">{p.name}</span>
-                  <span className="mini-product-price">{formatCurrency(p.price)}</span>
-                  <span className="mini-product-meta">★ {p.rating} · ◈ {p.communityScore}/10</span>
-                </div>
-              </Link>
-            ))}
-            {!moreFromBrand.length ? <p className="empty-label">More products will appear here as the catalog grows.</p> : null}
-          </div>
-        </section>
+          <Link to={`/feed?product=${product.id}`} className="inline-link">
+            See all <ArrowRight size={15} />
+          </Link>
+        </div>
 
-      <section className="section-block">
-          <div className="section-head">
-            <div>
-              <span className="section-kicker">Similar products</span>
-              <h2>{categoryMatches.length ? `From other brands in ${product.category}` : 'More community-backed picks'}</h2>
+        {/* Sentiment stats */}
+        <div className="snapshot-panel">
+          <div className="snapshot-stat">
+            <strong>78%</strong>
+            <span>Positive sentiment</span>
+          </div>
+          <div className="snapshot-stat">
+            <strong>{product.discussionCount}</strong>
+            <span>Posts and comments</span>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="pdp-tabs">
+          {(['posts', 'comments', 'reviews'] as CommunityTab[]).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              className={`pdp-tab${communityTab === tab ? ' active' : ''}`}
+              onClick={() => setCommunityTab(tab)}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              <span className="pdp-tab-count">
+                {tab === 'posts' ? productPosts.length
+                  : tab === 'comments' ? productComments.length
+                  : MOCK_REVIEWS.length}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Posts tab */}
+        {communityTab === 'posts' && (
+          <div className="pdp-tab-content">
+            <button
+              type="button"
+              className="pdp-create-prompt"
+              onClick={() => navigate(`/create?productId=${product.id}&type=Product%20Talk`, {
+                state: { backgroundLocation: location },
+              })}
+            >
+              <Pencil size={14} />
+              Share your experience with this product…
+            </button>
+            <div className="feed-stack">
+              {productPosts.length > 0 ? productPosts.map((post) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  author={users.find((u) => u.id === post.authorId)}
+                  product={product}
+                  compact
+                />
+              )) : (
+                <div className="empty-state">No posts yet. Be the first to share your thoughts.</div>
+              )}
             </div>
           </div>
-          <div className="product-rail">
-            {similarProducts.map((p) => (
-              <Link key={p.id} to={`/product/${p.id}`} className="mini-product-card">
-                <img src={p.heroImage} alt={p.name} className="mini-product-image" />
-                <div className="mini-product-info">
-                  <span className="mini-product-name">{p.name}</span>
-                  <span className="mini-product-eyebrow">{p.brand}</span>
-                  <span className="mini-product-price">{formatCurrency(p.price)}</span>
-                  <span className="mini-product-meta">★ {p.rating} · ◈ {p.communityScore}/10</span>
+        )}
+
+        {/* Comments tab */}
+        {communityTab === 'comments' && (
+          <div className="pdp-tab-content">
+            <div className="pdp-comments-list">
+              {productComments.length > 0 ? productComments.map((comment) => {
+                const parent = posts.find((p) => p.id === comment.postId)
+                const author = users.find((u) => u.id === comment.authorId)
+                return (
+                  <Link key={comment.id} to={`/feed/${comment.postId}`} className="pdp-comment-item">
+                    <div className="pdp-comment-thread-title">{parent?.title}</div>
+                    <div className="pdp-comment-body">
+                      <img src={author?.avatar} alt={author?.name} className="avatar-xs" />
+                      <div className="pdp-comment-right">
+                        <span className="pdp-comment-author">{author?.name}</span>
+                        <p className="pdp-comment-text">{comment.body}</p>
+                        <div className="pdp-comment-meta">
+                          <ThumbsUp size={12} />
+                          <span>{comment.upvotes}</span>
+                          <span className="dot-sep">·</span>
+                          <span>{new Date(comment.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              }) : (
+                <div className="empty-state">No comments yet.</div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Reviews tab */}
+        {communityTab === 'reviews' && (
+          <div className="pdp-tab-content">
+            <button
+              type="button"
+              className="pdp-create-prompt"
+              onClick={() => navigate(`/create?productId=${product.id}&type=Product%20Talk`, {
+                state: { backgroundLocation: location },
+              })}
+            >
+              <Pencil size={14} />
+              Write a review…
+            </button>
+            <div className="pdp-reviews-avg">
+              <span className="pdp-reviews-score">{product.rating}</span>
+              <StarRow rating={Math.round(product.rating)} />
+              <span className="pdp-reviews-count">{product.ratingsCount} ratings</span>
+            </div>
+            <div className="pdp-reviews-list">
+              {MOCK_REVIEWS.map((review) => (
+                <div key={review.id} className="pdp-review-item">
+                  <div className="pdp-review-header">
+                    <div>
+                      <span className="pdp-review-author">{review.authorName}</span>
+                      <span className="pdp-review-skin">{review.skinType} skin</span>
+                    </div>
+                    <StarRow rating={review.rating} />
+                  </div>
+                  <p className="pdp-review-body">{review.body}</p>
+                  <span className="pdp-review-date">{new Date(review.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                 </div>
-              </Link>
-            ))}
-            {!similarProducts.length ? <p className="empty-label">Similar products will appear here as the catalog grows.</p> : null}
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Alternate products recommended by the community ── */}
+      {alternates.length > 0 && (
+        <section className="section-block">
+          <div className="section-head">
+            <div>
+              <span className="section-kicker">Community recommended</span>
+              <h2>Alternate products people talk about</h2>
+            </div>
+          </div>
+          <div className="nl2-grid">
+            {alternates.map((p) => {
+              const opinions = getAlternateOpinions(p)
+              const ingredients = Array.isArray(p.ingredients) ? p.ingredients.slice(0, 3) : []
+              return (
+                <div key={p.id} className="nl2-card">
+                  <Link to={`/product/${p.id}`} className="nl2-product-header">
+                    <img src={p.heroImage} alt={p.name} className="nl2-product-image" />
+                    <div className="nl2-product-info">
+                      <div className="nl2-product-top">
+                        <span className="eyebrow">{p.brand}</span>
+                      </div>
+                      <strong className="nl2-product-name">{p.name}</strong>
+                      <p className="nl2-product-desc">
+                        {p.description.length > 80 ? p.description.slice(0, 80) + '…' : p.description}
+                      </p>
+                      {ingredients.length > 0 && (
+                        <p className="nl2-ingredients">{ingredients.join(' · ')}</p>
+                      )}
+                      <span className="nl2-sentiment">{p.communityScore}/10 community score</span>
+                    </div>
+                  </Link>
+                  <div className="nl2-divider" />
+                  <div className="nl2-opinions">
+                    {opinions.length > 0 ? opinions.map((op, i) => {
+                      const author = users.find((u) => u.id === op.authorId)
+                      return (
+                        <Link key={i} to={`/feed/${op.threadId}`} className="nl2-opinion">
+                          <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+                          <div className="nl2-opinion-body">
+                            <span className="nl2-opinion-author">{author?.name}</span>
+                            <p className="nl2-opinion-text">
+                              {op.text.length > 100 ? op.text.slice(0, 100) + '…' : op.text}
+                            </p>
+                          </div>
+                        </Link>
+                      )
+                    }) : (
+                      <p className="nl2-no-opinions">No community opinions yet.</p>
+                    )}
+                  </div>
+                  <Link to={`/feed?product=${p.id}`} className="nl2-see-more">
+                    <MessageCircle size={13} />
+                    See community opinions
+                  </Link>
+                </div>
+              )
+            })}
           </div>
         </section>
+      )}
+
     </div>
   )
 }

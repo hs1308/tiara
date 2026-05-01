@@ -2545,6 +2545,270 @@
   border: 1.5px solid transparent;
 }
 
+/* ── PDP additions ── */
+
+.product-summary-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.pdp-follow-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(23, 50, 44, 0.2);
+  background: transparent;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.pdp-follow-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pdp-follow-btn.followed {
+  background: rgba(226, 239, 232, 0.7);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Tabs */
+
+.pdp-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid rgba(23, 50, 44, 0.1);
+  padding-bottom: 0;
+}
+
+.pdp-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1px;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.pdp-tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--ink);
+}
+
+.pdp-tab:hover:not(.active) {
+  color: var(--ink);
+}
+
+.pdp-tab-count {
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: rgba(23, 50, 44, 0.08);
+  color: var(--muted);
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.pdp-tab.active .pdp-tab-count {
+  background: var(--ink);
+  color: white;
+}
+
+.pdp-tab-content {
+  display: grid;
+  gap: 14px;
+}
+
+/* Create prompt */
+
+.pdp-create-prompt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px dashed rgba(23, 50, 44, 0.18);
+  border-radius: 16px;
+  background: rgba(248, 246, 242, 0.7);
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.pdp-create-prompt:hover {
+  border-color: var(--accent);
+  background: rgba(226, 239, 232, 0.3);
+  color: var(--accent);
+}
+
+/* Comments tab */
+
+.pdp-comments-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pdp-comment-item {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(23, 50, 44, 0.08);
+  border-radius: 16px;
+  text-decoration: none;
+  transition: border-color 150ms ease;
+}
+
+.pdp-comment-item:hover {
+  border-color: rgba(15, 79, 70, 0.2);
+}
+
+.pdp-comment-thread-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
+
+.pdp-comment-body {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.pdp-comment-right {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.pdp-comment-author {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pdp-comment-text {
+  font-size: 0.88rem;
+  color: var(--ink);
+  margin: 0;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
+.pdp-comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Reviews tab */
+
+.pdp-reviews-avg {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: rgba(248, 246, 242, 0.8);
+  border-radius: 16px;
+}
+
+.pdp-reviews-score {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.pdp-star-row {
+  display: flex;
+  gap: 2px;
+  color: #f59e0b;
+}
+
+.pdp-reviews-count {
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.pdp-reviews-list {
+  display: grid;
+  gap: 10px;
+}
+
+.pdp-review-item {
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(23, 50, 44, 0.08);
+  border-radius: 16px;
+}
+
+.pdp-review-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.pdp-review-author {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--ink);
+  display: block;
+}
+
+.pdp-review-skin {
+  font-size: 0.78rem;
+  color: var(--muted);
+  display: block;
+  margin-top: 1px;
+}
+
+.pdp-review-body {
+  font-size: 0.9rem;
+  color: var(--ink);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.pdp-review-date {
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
 @media (max-width: 900px) {
   .nl2-grid {
     grid-template-columns: repeat(2, 1fr);
