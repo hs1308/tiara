@@ -3,9 +3,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FaceScanModal } from '../components/ui/FaceScanModal'
 import { PostCard } from '../components/ui/PostCard'
-import { ProductCard } from '../components/ui/ProductCard'
-import { useAddToCart, useCurrentUser, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
-import type { Post, Product } from '../types'
+import { useCurrentUser, useComments, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
+import type { Comment, Post, Product } from '../types'
 
 const CONTEXTUAL_TOPIC = 'dark circles'
 const CONTEXTUAL_TERMS = [
@@ -40,6 +39,53 @@ function getContextualPosts(posts: Post[], products: Product[]) {
   return (matched.length ? matched : [...posts].sort((a, b) => b.upvotes - a.upvotes)).slice(0, 4)
 }
 
+// Module 2 helpers
+const USER_CONCERNS = ['pigmentation', 'acne', 'combination', 'frizz', 'dry', 'sunscreen', 'moisturiser']
+
+function getCommunityProducts(products: Product[], excludeIds: Set<string>) {
+  const scored = products
+    .filter((p) => !excludeIds.has(p.id))
+    .map((p) => {
+      const haystack = [
+        p.name, p.description, p.category,
+        ...(Array.isArray(p.tags) ? p.tags : []),
+        ...(Array.isArray(p.suitability) ? p.suitability : []),
+      ].join(' ').toLowerCase()
+      const score = USER_CONCERNS.filter((c) => haystack.includes(c)).length
+      return { product: p, score }
+    })
+    .sort((a, b) => b.score - a.score || b.product.discussionCount - a.product.discussionCount)
+  return scored.slice(0, 3).map((s) => s.product)
+}
+
+function getBestPostForProduct(
+  productId: string,
+  posts: Post[],
+  comments: Comment[],
+): { type: 'post'; item: Post } | { type: 'comment'; item: Comment; post: Post } | null {
+  // Try a post directly tagged to this product
+  const directPost = [...posts]
+    .filter((p) => p.productId === productId)
+    .sort((a, b) => b.upvotes - a.upvotes)[0]
+  if (directPost) return { type: 'post', item: directPost }
+
+  // Try a comment on a post tagged to this product
+  const commentMatch = [...comments]
+    .filter((c) => {
+      const parent = posts.find((p) => p.id === c.postId)
+      return parent?.productId === productId
+    })
+    .sort((a, b) => b.upvotes - a.upvotes)[0]
+  if (commentMatch) {
+    const parentPost = posts.find((p) => p.id === commentMatch.postId)
+    if (parentPost) return { type: 'comment', item: commentMatch, post: parentPost }
+  }
+
+  // Fall back to highest upvoted post overall
+  const fallback = [...posts].sort((a, b) => b.upvotes - a.upvotes)[0]
+  return fallback ? { type: 'post', item: fallback } : null
+}
+
 export function HomePage() {
   const navigate = useNavigate()
   const [showFaceScan, setShowFaceScan] = useState(false)
@@ -47,14 +93,16 @@ export function HomePage() {
   const { data: users = [] } = useUsers()
   const { data: products = [] } = useProducts()
   const { data: posts = [] } = usePosts()
-  const addToCart = useAddToCart()
+  const { data: allComments = [] } = useComments()
 
   const contextualPosts = getContextualPosts(posts, products)
   const contextualPostIds = new Set(contextualPosts.map((post) => post.id))
-  const featuredProducts = products.filter((p) => !contextualPostIds.has(p.id)).slice(0, 3)
   const livePosts = posts.filter((post) => !contextualPostIds.has(post.id)).slice(0, 3)
   const firstName = user?.name?.split(' ')[0] ?? 'there'
-  void firstName // used in future modules
+  void firstName
+
+  // Module 2: products people are talking about
+  const communityProducts = getCommunityProducts(products, contextualPostIds)
 
   return (
     <div className="page-stack">
@@ -108,25 +156,98 @@ export function HomePage() {
         </section>
       )}
 
-      <section className="section-block">
-        <div className="section-head">
-          <div>
-            <h2>The community is obsessing over</h2>
+      {/* ── Module 2: Products people are talking about ── */}
+      {communityProducts.length > 0 && (
+        <section className="section-block community-products-module">
+          <div className="section-head">
+            <div>
+              <span className="section-kicker">For you</span>
+              <h2>Products people are talking about</h2>
+            </div>
+            <Link
+              to={`/feed?problem=${encodeURIComponent(USER_CONCERNS[0])}`}
+              className="inline-link"
+            >
+              See more discussions
+            </Link>
           </div>
-          <Link to="/shop" className="inline-link">
-            See all
-          </Link>
-        </div>
-        <div className="product-grid">
-          {featuredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onAddToCart={(productId) => addToCart.mutateAsync(productId)}
-            />
-          ))}
-        </div>
-      </section>
+
+          <div className="community-products-table">
+            {communityProducts.map((product) => {
+              const match = getBestPostForProduct(product.id, posts, allComments)
+              const threadPost = match?.type === 'post' ? match.item
+                : match?.type === 'comment' ? match.post
+                : null
+              const snippet = match?.type === 'post'
+                ? match.item.title
+                : match?.type === 'comment'
+                ? match.item.body
+                : null
+              const snippetAuthor = match?.type === 'post'
+                ? users.find((u) => u.id === match.item.authorId)
+                : match?.type === 'comment'
+                ? users.find((u) => u.id === match.item.authorId)
+                : null
+              const upvotes = match?.type === 'post' ? match.item.upvotes
+                : match?.type === 'comment' ? match.item.upvotes
+                : 0
+
+              return (
+                <div key={product.id} className="community-product-row">
+                  {/* Left: product */}
+                  <Link to={`/product/${product.id}`} className="community-product-cell">
+                    <img
+                      src={product.heroImage}
+                      alt={product.name}
+                      className="community-product-image"
+                    />
+                    <div className="community-product-info">
+                      <span className="eyebrow">{product.brand}</span>
+                      <span className="community-product-name">{product.name}</span>
+                      <div className="community-product-meta">
+                        <span>★ {product.rating}</span>
+                        <span>{product.discussionCount} discussing</span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Right: community thread */}
+                  {threadPost && snippet ? (
+                    <Link
+                      to={`/feed/${threadPost.id}`}
+                      className="community-thread-cell"
+                    >
+                      <p className="community-thread-snippet">
+                        &ldquo;{snippet.length > 120 ? snippet.slice(0, 120) + '…' : snippet}&rdquo;
+                      </p>
+                      <div className="community-thread-meta">
+                        {snippetAuthor && (
+                          <img
+                            src={snippetAuthor.avatar}
+                            alt={snippetAuthor.name}
+                            className="avatar-xs"
+                          />
+                        )}
+                        <span>{snippetAuthor?.name}</span>
+                        <span className="dot-sep">·</span>
+                        <ThumbsUp size={11} />
+                        <span>{upvotes}</span>
+                      </div>
+                    </Link>
+                  ) : (
+                    <Link
+                      to={`/feed?product=${product.id}`}
+                      className="community-thread-cell community-thread-empty"
+                    >
+                      <span>See what the community is saying →</span>
+                    </Link>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="section-block">
         <div className="section-head">
