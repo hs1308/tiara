@@ -1,11 +1,10 @@
-import { MessageCircle, Search, ShoppingBag, ThumbsUp } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { MessageCircle, Search, ThumbsUp } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { FaceScanModal } from '../components/ui/FaceScanModal'
 import { PostCard } from '../components/ui/PostCard'
 import { ProductCard } from '../components/ui/ProductCard'
 import { useAddToCart, useCurrentUser, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
-import { formatCurrency } from '../lib/format'
 import type { Post, Product } from '../types'
 
 const CONTEXTUAL_TOPIC = 'dark circles'
@@ -24,93 +23,21 @@ function hasContextualMatch(values: Array<string | null | undefined>) {
   return CONTEXTUAL_TERMS.some((term) => haystack.includes(term))
 }
 
-function getContextualProducts(products: Product[]) {
-  const matched = products.filter((product) =>
-    hasContextualMatch([
-      product.name,
-      product.brand,
-      product.description,
-      product.category,
-      ...product.tags,
-      ...product.suitability,
-      ...product.ingredients,
-    ]),
-  )
-
-  return (matched.length ? matched : [...products].sort((a, b) => b.discussionCount - a.discussionCount)).slice(0, 3)
-}
-
-function getContextualPosts(posts: Post[], contextualProducts: Product[]) {
-  const contextualProductIds = new Set(contextualProducts.map((product) => product.id))
-  const matched = posts.filter((post) =>
-    contextualProductIds.has(post.productId ?? '') ||
-    hasContextualMatch([post.title, post.description, post.type, post.brand, ...post.tags]),
-  )
-
-  return (matched.length ? matched : [...posts].sort((a, b) => b.commentCount - a.commentCount)).slice(0, 3)
-}
-
-function HeroProductRow({
-  product,
-  onAddToCart,
-}: {
-  product: Product
-  onAddToCart: () => Promise<unknown>
-}) {
-  const location = useLocation()
-  const navigate = useNavigate()
-  const [justAdded, setJustAdded] = useState(false)
-
-  useEffect(() => {
-    if (!justAdded) return
-    const t = window.setTimeout(() => setJustAdded(false), 1400)
-    return () => window.clearTimeout(t)
-  }, [justAdded])
-
-  return (
-    <div className="hero-product-row">
-      <Link to={`/product/${product.id}`} className="hero-product-thumb-wrap">
-        <img src={product.heroImage} alt={product.name} className="hero-product-thumb" />
-      </Link>
-      <div className="hero-product-info">
-        <span className="eyebrow">{product.brand}</span>
-        <Link to={`/product/${product.id}`} className="hero-product-name">{product.name}</Link>
-        <div className="hero-product-meta">
-          <span>★ {product.rating}</span>
-          <span>◈ {product.communityScore}/10</span>
-          <span>{product.discussionCount} discussing</span>
-        </div>
-      </div>
-      <div className="hero-product-aside">
-        <span className="hero-product-price">{formatCurrency(product.price)}</span>
-        <div className="hero-product-ctas">
-          <button
-            type="button"
-            className="secondary-button hero-action-btn"
-            title="Start discussion"
-            onClick={() =>
-              navigate(`/create?productId=${product.id}&type=Product%20Talk`, {
-                state: { backgroundLocation: location },
-              })
-            }
-          >
-            <MessageCircle size={13} />
-          </button>
-          <button
-            type="button"
-            className="primary-button hero-action-btn"
-            onClick={async () => {
-              await onAddToCart()
-              setJustAdded(true)
-            }}
-          >
-            <ShoppingBag size={13} />
-            {justAdded ? 'Added' : 'Add'}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
+function getContextualPosts(posts: Post[], products: Product[]) {
+  const matched = posts.filter((post) => {
+    const product = products.find((p) => p.id === post.productId)
+    return hasContextualMatch([
+      post.title,
+      post.description,
+      post.brand,
+      ...(Array.isArray(post.tags) ? post.tags : []),
+      product?.name,
+      product?.description,
+      ...(Array.isArray(product?.tags) ? product!.tags : []),
+      ...(Array.isArray(product?.suitability) ? product!.suitability : []),
+    ])
+  })
+  return (matched.length ? matched : [...posts].sort((a, b) => b.upvotes - a.upvotes)).slice(0, 3)
 }
 
 export function HomePage() {
@@ -122,75 +49,64 @@ export function HomePage() {
   const { data: posts = [] } = usePosts()
   const addToCart = useAddToCart()
 
-  const contextualProducts = getContextualProducts(products)
-  const contextualPosts = getContextualPosts(posts, contextualProducts)
-  const contextualProductIds = new Set(contextualProducts.map((product) => product.id))
+  const contextualPosts = getContextualPosts(posts, products)
   const contextualPostIds = new Set(contextualPosts.map((post) => post.id))
-  const featuredProducts = products.filter((product) => !contextualProductIds.has(product.id)).slice(0, 3)
+  const featuredProducts = products.filter((p) => !contextualPostIds.has(p.id)).slice(0, 3)
   const livePosts = posts.filter((post) => !contextualPostIds.has(post.id)).slice(0, 3)
+  const firstName = user?.name?.split(' ')[0] ?? 'there'
+  void firstName // used in future modules
 
   return (
     <div className="page-stack">
-      <section className="hero-panel contextual-hero">
-        <div className="hero-copy">
-          <h2 className="contextual-hero-heading">
-            {user ? `Hi ${user.name.split(' ')[0]} · ` : ''}Based on your recent search{' '}
-            <span className="topic-badge">
-              <Search size={13} />
-              {CONTEXTUAL_TOPIC}
-            </span>
-          </h2>
-          <p>Here&apos;s what the community says — and the products that actually helped.</p>
-        </div>
 
-        <div className="contextual-columns">
-          <div className="contextual-col">
-            <div className="contextual-subhead">
-              <span className="section-kicker">Products that helped</span>
-              <Link to={`/shop?concern=${encodeURIComponent(CONTEXTUAL_TOPIC)}`} className="inline-link">See all</Link>
+      {/* ── Module 1: Based on your recent search ── */}
+      {contextualPosts.length > 0 && (
+        <section className="section-block recent-search-module">
+          <div className="recent-search-header">
+            <div className="recent-search-meta">
+              <span className="section-kicker">Based on your recent search</span>
+              <span className="topic-badge">
+                <Search size={12} />
+                {CONTEXTUAL_TOPIC}
+              </span>
             </div>
-            <div className="hero-product-list">
-              {contextualProducts.map((product) => (
-                <HeroProductRow
-                  key={product.id}
-                  product={product}
-                  onAddToCart={() => addToCart.mutateAsync(product.id)}
-                />
-              ))}
-            </div>
+            <Link
+              to={`/feed?problem=${encodeURIComponent(CONTEXTUAL_TOPIC)}`}
+              className="inline-link"
+            >
+              See all discussions
+            </Link>
           </div>
 
-          <div className="contextual-col">
-            <div className="contextual-subhead">
-              <span className="section-kicker">What people are saying</span>
-              <Link to={`/feed?problem=${encodeURIComponent(CONTEXTUAL_TOPIC)}`} className="inline-link">See all</Link>
-            </div>
-            <div className="hero-post-list">
-              {contextualPosts.map((post) => {
-                const author = users.find((u) => u.id === post.authorId)
-                return (
-                  <Link key={post.id} to={`/feed/${post.id}`} className="hero-post-snippet">
-                    <div className="hero-post-snippet-top">
-                      <span className="tag-pill hero-type-pill">{post.type}</span>
-                      <div className="hero-post-snippet-stats">
-                        <ThumbsUp size={11} />
-                        {post.upvotes}
-                        <MessageCircle size={11} />
-                        {post.commentCount}
-                      </div>
+          <div className="recent-search-posts">
+            {contextualPosts.map((post) => {
+              const author = users.find((u) => u.id === post.authorId)
+              return (
+                <Link
+                  key={post.id}
+                  to={`/feed/${post.id}`}
+                  className="search-post-card"
+                >
+                  <div className="search-post-top">
+                    <span className="tag-pill">{post.type}</span>
+                    <div className="search-post-stats">
+                      <ThumbsUp size={12} />
+                      <span>{post.upvotes}</span>
+                      <MessageCircle size={12} />
+                      <span>{post.commentCount}</span>
                     </div>
-                    <p className="hero-post-snippet-title">{post.title}</p>
-                    <div className="hero-post-snippet-author">
-                      <img src={author?.avatar} alt={author?.name} className="avatar-xs" />
-                      <span>{author?.name}</span>
-                    </div>
-                  </Link>
-                )
-              })}
-            </div>
+                  </div>
+                  <p className="search-post-title">{post.title}</p>
+                  <div className="search-post-author">
+                    <img src={author?.avatar} alt={author?.name} className="avatar-xs" />
+                    <span>{author?.name}</span>
+                  </div>
+                </Link>
+              )
+            })}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       <section className="section-block">
         <div className="section-head">
