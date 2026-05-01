@@ -53,6 +53,7 @@ export interface Product {
   ingredients: string[]
   howToUse: string
   offers: string[]
+  newLaunch?: boolean
 }
 
 export interface Post {

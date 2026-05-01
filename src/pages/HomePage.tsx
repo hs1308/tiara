@@ -403,6 +403,70 @@ export function HomePage() {
         </div>
       </section>
 
+      {/* ── Module 4: New launches ── */}
+      {(() => {
+        const newLaunches = products.filter((p) => p.newLaunch)
+        if (!newLaunches.length) return null
+        return (
+          <section className="section-block">
+            <div className="section-head">
+              <div>
+                <span className="section-kicker">Fresh on Tiara</span>
+                <h2>What the community is saying about new launches</h2>
+              </div>
+            </div>
+            <div className="new-launches-rail">
+              {newLaunches.map((product) => {
+                const topPost = [...posts]
+                  .filter((p) => p.productId === product.id)
+                  .sort((a, b) => b.upvotes - a.upvotes)[0]
+                const topComment = !topPost
+                  ? allComments
+                      .filter((c) => {
+                        const parent = posts.find((p) => p.id === c.postId)
+                        return parent?.productId === product.id
+                      })
+                      .sort((a, b) => b.upvotes - a.upvotes)[0]
+                  : null
+                const quote = topPost?.title ?? topComment?.body ?? null
+                const discussionCount = product.discussionCount
+
+                // Only show if there's community signal
+                if (!quote) return null
+
+                return (
+                  <Link
+                    key={product.id}
+                    to={`/product/${product.id}`}
+                    className="new-launch-card"
+                  >
+                    <div className="new-launch-image-wrap">
+                      <img
+                        src={product.heroImage}
+                        alt={product.name}
+                        className="new-launch-image"
+                      />
+                      <span className="new-launch-badge">New launch</span>
+                    </div>
+                    <div className="new-launch-body">
+                      <span className="eyebrow">{product.brand}</span>
+                      <strong className="new-launch-name">{product.name}</strong>
+                      <p className="new-launch-quote">
+                        &ldquo;{quote.length > 100 ? quote.slice(0, 100) + '…' : quote}&rdquo;
+                      </p>
+                      <span className="new-launch-count">
+                        <MessageCircle size={12} />
+                        {discussionCount} discussing
+                      </span>
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })()}
+
       <section className="section-block cta-band">
         <div>
           <span className="section-kicker">Complete your profile</span>

@@ -188,6 +188,7 @@ export const mockProducts: Product[] = [
     ingredients: ['Mango butter', 'Marula oil', 'Liquorice extract'],
     howToUse: 'Tap under the eyes and around the mouth, then blend with fingers or a sponge.',
     offers: ['Combo offer with compact', 'Free mini on orders above Rs. 1999'],
+    newLaunch: true,
   },
   {
     id: 'product-minimalist-serum',
@@ -269,6 +270,7 @@ export const mockProducts: Product[] = [
     ingredients: ['Quinoa protein', 'Avocado oil', 'Shea butter'],
     howToUse: 'Use once or twice a week after shampoo. Leave in for 5-7 minutes.',
     offers: ['Haircare duo offer live', 'Extra 15% with bank card'],
+    newLaunch: true,
   },
   {
     id: 'product-sdj-mist',
@@ -296,6 +298,7 @@ export const mockProducts: Product[] = [
     ingredients: ['Salted caramel accord', 'Pistachio accord', 'Vanilla'],
     howToUse: 'Spray on pulse points, clothes, or layer over a body lotion.',
     offers: ['Festive beauty edit inclusion', 'Wallet credits up to Rs. 150'],
+    newLaunch: true,
   },
 ]
 
