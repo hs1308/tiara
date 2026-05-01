@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { FaceScanModal } from '../components/ui/FaceScanModal'
 import { PostCard } from '../components/ui/PostCard'
 import { useCurrentUser, useComments, useCreateComment, usePosts, useProducts, useUsers } from '../hooks/useTiaraData'
-import { demoUserId } from '../data/mockData'
+import { demoUserId, mockProducts } from '../data/mockData'
 import type { Comment, Post, Product } from '../types'
 
 const CONTEXTUAL_TOPIC = 'dark circles'
@@ -405,7 +405,11 @@ export function HomePage() {
 
       {/* ── Module 4: New launches ── */}
       {(() => {
-        const newLaunches = products.filter((p) => p.newLaunch)
+        // newLaunch flag may not exist in Supabase yet — merge from mockProducts as fallback
+        const newLaunchIds = new Set(
+          mockProducts.filter((p) => p.newLaunch).map((p) => p.id)
+        )
+        const newLaunches = products.filter((p) => p.newLaunch || newLaunchIds.has(p.id))
         if (!newLaunches.length) return null
         return (
           <section className="section-block">
@@ -428,11 +432,9 @@ export function HomePage() {
                       })
                       .sort((a, b) => b.upvotes - a.upvotes)[0]
                   : null
-                const quote = topPost?.title ?? topComment?.body ?? null
+                // Fall back to product description so card always shows
+                const quote = topPost?.title ?? topComment?.body ?? product.description
                 const discussionCount = product.discussionCount
-
-                // Only show if there's community signal
-                if (!quote) return null
 
                 return (
                   <Link
