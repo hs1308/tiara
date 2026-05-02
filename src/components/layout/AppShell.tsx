@@ -1,24 +1,35 @@
-import { Menu, Search, ShoppingCart, Wallet, X, Package, MapPin, CreditCard, HelpCircle, Settings, LogOut } from 'lucide-react'
+import { Menu, MessageCircle, Search, ShoppingCart, Wallet, X, Package, MapPin, CreditCard, HelpCircle, Settings, LogOut } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useCartCount, useCurrentUser } from '../../hooks/useTiaraData'
 import { formatCurrency } from '../../lib/format'
 import { BottomNav } from './BottomNav'
+import { MessagingProvider, useMessaging } from '../../state/MessagingContext'
 import '../../styles/app.css'
 
 const MENU_ITEMS = [
-  { icon: Package, label: 'My Orders', path: '/orders' },
-  { icon: MapPin, label: 'My Addresses', path: '/addresses' },
-  { icon: CreditCard, label: 'My Wallet', path: '/wallet' },
-  { icon: HelpCircle, label: 'Help & Support', path: '/help' },
-  { icon: Settings, label: 'Account Settings', path: '/settings' },
+  { icon: Package,   label: 'My Orders',       path: '/orders' },
+  { icon: MapPin,    label: 'My Addresses',     path: '/addresses' },
+  { icon: CreditCard,label: 'My Wallet',        path: '/wallet' },
+  { icon: HelpCircle,label: 'Help & Support',   path: '/help' },
+  { icon: Settings,  label: 'Account Settings', path: '/settings' },
 ]
 
 export function AppShell() {
+  return (
+    <MessagingProvider>
+      <AppShellInner />
+    </MessagingProvider>
+  )
+}
+
+function AppShellInner() {
   const navigate = useNavigate()
   const location = useLocation()
   const { data: currentUser } = useCurrentUser()
   const cartCount = useCartCount()
+  const { conversations } = useMessaging()
+  const hasMessages = conversations.length > 0
   const [menuOpen, setMenuOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
@@ -32,14 +43,15 @@ export function AppShell() {
   }, [location.pathname, location.search])
 
   const titleMap: Record<string, string> = {
-    '/': 'Tiara',
-    '/feed': 'Community',
-    '/shop': 'Shop',
-    '/cart': 'Cart',
-    '/wallet': 'Wallet',
-    '/checkout': 'Checkout',
-    '/create': 'Create',
+    '/':        'Tiara',
+    '/feed':    'Community',
+    '/shop':    'Discover',
+    '/cart':    'Cart',
+    '/wallet':  'Wallet',
+    '/checkout':'Checkout',
+    '/create':  'Create',
     '/profile': 'Profile',
+    '/inbox':   'Messages',
   }
 
   const pageTitle =
@@ -47,8 +59,8 @@ export function AppShell() {
 
   return (
     <div className="app-frame">
-      <div className="ambient ambient-left"></div>
-      <div className="ambient ambient-right"></div>
+      <div className="ambient ambient-left" />
+      <div className="ambient ambient-right" />
       <div className="app-shell">
         <header className="topbar">
           <button
@@ -59,14 +71,27 @@ export function AppShell() {
           >
             <Menu size={18} />
           </button>
+
           <button className="brand-lockup" type="button" onClick={() => navigate('/')}>
             <span className="brand-wordmark">Tiara</span>
             <span className="brand-subtitle">{pageTitle}</span>
           </button>
+
           <div className="topbar-actions">
             <button className="icon-button" type="button" aria-label="Search">
               <Search size={18} />
             </button>
+
+            <button
+              className="icon-button inbox-icon-button"
+              type="button"
+              aria-label="Inbox"
+              onClick={() => navigate('/inbox')}
+            >
+              <MessageCircle size={18} />
+              {hasMessages && <span className="inbox-dot" />}
+            </button>
+
             <button
               className="icon-button cart-icon-button"
               type="button"
@@ -78,11 +103,8 @@ export function AppShell() {
                 <span className="cart-badge">{cartCount > 9 ? '9+' : cartCount}</span>
               )}
             </button>
-            <button
-              className="wallet-pill"
-              type="button"
-              onClick={() => navigate('/wallet')}
-            >
+
+            <button className="wallet-pill" type="button" onClick={() => navigate('/wallet')}>
               <Wallet size={16} />
               <span>{formatCurrency(currentUser?.walletBalance ?? 0)}</span>
             </button>

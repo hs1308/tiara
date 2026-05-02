@@ -1,29 +1,34 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { FaceScanModal, SCAN_RESULTS } from '../components/ui/FaceScanModal'
-import { useCurrentUser, useComments, usePosts } from '../hooks/useTiaraData'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { MessageCircle } from 'lucide-react'
+import { useComments, usePosts, useUsers } from '../hooks/useTiaraData'
+import { demoUserId } from '../data/mockData'
 import { formatDate } from '../lib/format'
 
 type Tab = 'posts' | 'comments'
 
-export function ProfilePage() {
-  const { data: user } = useCurrentUser()
+export function UserProfilePage() {
+  const { userId = '' } = useParams()
+  const navigate = useNavigate()
+  const { data: users = [] } = useUsers()
   const { data: posts = [] } = usePosts()
   const { data: comments = [] } = useComments()
-  const [showFaceScan, setShowFaceScan] = useState(false)
-  const [scanApplied, setScanApplied] = useState(false)
   const [tab, setTab] = useState<Tab>('posts')
 
-  const myPosts = posts.filter((p) => p.authorId === user?.id)
-  const myComments = comments.filter((c) => c.authorId === user?.id && !c.body.startsWith('AI_SUMMARY'))
+  const user = users.find((u) => u.id === userId)
 
-  const skinType = scanApplied ? SCAN_RESULTS.skinType : user?.skinType ?? ''
-  const skinTone = scanApplied ? SCAN_RESULTS.skinTone : user?.skinTone ?? ''
-  const skinConcerns = scanApplied ? SCAN_RESULTS.skinConcerns : (user?.skinConcerns ?? [])
-  const hairType = scanApplied ? SCAN_RESULTS.hairType : user?.hairType ?? ''
-  const hairConcerns = scanApplied ? SCAN_RESULTS.hairConcerns : (user?.hairConcerns ?? [])
+  if (!user) return <div className="empty-state">User not found.</div>
 
-  if (!user) return <div className="empty-state">Profile unavailable.</div>
+  // Redirect own profile to /profile
+  if (userId === demoUserId) {
+    navigate('/profile', { replace: true })
+    return null
+  }
+
+  const userPosts = posts.filter((p) => p.authorId === userId)
+  const userComments = comments.filter(
+    (c) => c.authorId === userId && !c.body.startsWith('AI_SUMMARY'),
+  )
 
   return (
     <div className="page-stack">
@@ -35,37 +40,47 @@ export function ProfilePage() {
           <h1>{user.name}</h1>
           <p>{user.bio}</p>
           <div className="profile-stats-row">
-            <span><strong>{myPosts.length}</strong> posts</span>
-            <span><strong>{myComments.length}</strong> comments</span>
+            <span><strong>{userPosts.length}</strong> posts</span>
+            <span><strong>{userComments.length}</strong> comments</span>
             <span><strong>{user.karma}</strong> karma</span>
           </div>
+          <div className="tag-row" style={{ marginTop: '10px' }}>
+            {user.badges.map((b) => <span key={b} className="tag-pill">{b}</span>)}
+          </div>
         </div>
-        <button type="button" className="secondary-button" onClick={() => setShowFaceScan(true)}>
-          Analyse Face
+        <button
+          type="button"
+          className="primary-button"
+          onClick={() => navigate(`/inbox/${userId}`)}
+        >
+          <MessageCircle size={15} />
+          Message
         </button>
       </section>
 
-      {/* Skin + hair profile */}
+      {/* Skin profile */}
       <section className="details-grid">
         <article className="detail-card">
           <h3>Skin profile</h3>
-          <p>{skinType} skin · {skinTone} tone</p>
+          <p>{user.skinType} skin · {user.skinTone} tone</p>
           <div className="tag-row">
-            {skinConcerns.map((c) => <span key={c} className="tag-pill">{c}</span>)}
+            {(user.skinConcerns as string[]).map((c) => (
+              <span key={c} className="tag-pill">{c}</span>
+            ))}
           </div>
         </article>
         <article className="detail-card">
           <h3>Hair profile</h3>
-          <p>{hairType} hair</p>
+          <p>{user.hairType} hair</p>
           <div className="tag-row">
-            {hairConcerns.map((c) => <span key={c} className="tag-pill">{c}</span>)}
+            {(user.hairConcerns as string[]).map((c) => (
+              <span key={c} className="tag-pill">{c}</span>
+            ))}
           </div>
         </article>
         <article className="detail-card">
-          <h3>Badges</h3>
-          <div className="tag-row">
-            {user.badges.map((b) => <span key={b} className="tag-pill">{b}</span>)}
-          </div>
+          <h3>City</h3>
+          <p>{user.city}</p>
         </article>
       </section>
 
@@ -77,20 +92,20 @@ export function ProfilePage() {
             className={`profile-tab${tab === 'posts' ? ' profile-tab--active' : ''}`}
             onClick={() => setTab('posts')}
           >
-            Posts <span className="profile-tab-count">{myPosts.length}</span>
+            Posts <span className="profile-tab-count">{userPosts.length}</span>
           </button>
           <button
             type="button"
             className={`profile-tab${tab === 'comments' ? ' profile-tab--active' : ''}`}
             onClick={() => setTab('comments')}
           >
-            Comments <span className="profile-tab-count">{myComments.length}</span>
+            Comments <span className="profile-tab-count">{userComments.length}</span>
           </button>
         </div>
 
         {tab === 'posts' && (
           <div className="feed-stack">
-            {myPosts.length > 0 ? myPosts.map((post) => (
+            {userPosts.length > 0 ? userPosts.map((post) => (
               <Link to={`/feed/${post.id}`} className="profile-activity-card" key={post.id}>
                 <strong className="profile-activity-title">{post.title}</strong>
                 <p className="profile-activity-body">{post.description}</p>
@@ -108,13 +123,11 @@ export function ProfilePage() {
 
         {tab === 'comments' && (
           <div className="feed-stack">
-            {myComments.length > 0 ? myComments.map((comment) => {
+            {userComments.length > 0 ? userComments.map((comment) => {
               const post = posts.find((p) => p.id === comment.postId)
               return (
                 <Link to={`/feed/${comment.postId}`} className="profile-activity-card" key={comment.id}>
-                  {post && (
-                    <span className="profile-comment-context">on: {post.title}</span>
-                  )}
+                  {post && <span className="profile-comment-context">on: {post.title}</span>}
                   <p className="profile-activity-body">{comment.body}</p>
                   <div className="profile-activity-meta">
                     <span>{formatDate(comment.createdAt)}</span>
@@ -128,13 +141,6 @@ export function ProfilePage() {
           </div>
         )}
       </section>
-
-      {showFaceScan && (
-        <FaceScanModal
-          onClose={() => setShowFaceScan(false)}
-          onComplete={() => { setScanApplied(true); setShowFaceScan(false) }}
-        />
-      )}
     </div>
   )
 }

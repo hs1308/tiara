@@ -66,9 +66,17 @@ export function PostCard({ post, author, product, compact }: PostCardProps) {
     <article className={`post-card${compact ? ' compact' : ''}`}>
       <div className="post-meta">
         <div className="author-row">
-          <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+          <Link to={author ? `/user/${author.id}` : '#'} onClick={(e) => e.stopPropagation()}>
+            <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+          </Link>
           <div>
-            <div className="author-name">{author?.name}</div>
+            <Link
+              to={author ? `/user/${author.id}` : '#'}
+              className="author-name"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {author?.name}
+            </Link>
             <div className="meta-line">
               {formatDate(post.createdAt)}
             </div>

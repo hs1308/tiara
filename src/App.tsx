@@ -15,6 +15,8 @@ const CheckoutPage = lazy(() => import('./pages/CheckoutPage').then((module) => 
 const SuccessPage = lazy(() => import('./pages/SuccessPage').then((module) => ({ default: module.SuccessPage })))
 const CreatePostPage = lazy(() => import('./pages/CreatePostPage').then((module) => ({ default: module.CreatePostPage })))
 const ProfilePage = lazy(() => import('./pages/ProfilePage').then((module) => ({ default: module.ProfilePage })))
+const UserProfilePage = lazy(() => import('./pages/UserProfilePage').then((module) => ({ default: module.UserProfilePage })))
+const InboxPage = lazy(() => import('./pages/InboxPage').then((module) => ({ default: module.InboxPage })))
 const BrandPage = lazy(() => import('./pages/BrandPage').then((module) => ({ default: module.BrandPage })))
 
 function App() {
@@ -40,6 +42,9 @@ function App() {
           <Route path="/success/:orderId" element={<SuccessPage />} />
           <Route path="/create" element={<CreatePostPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/user/:userId" element={<UserProfilePage />} />
+          <Route path="/inbox" element={<InboxPage />} />
+          <Route path="/inbox/:userId" element={<InboxPage />} />
           <Route path="/brand/:brandSlug" element={<BrandPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -320,12 +320,14 @@ function CommentNode({
       <div className="thread-content">
         <article className={`thread-comment${comment.body.startsWith('AI_SUMMARY:') ? ' ai-summary-comment' : ''}`}>
           <div className="author-row">
-            <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+            <Link to={`/user/${author?.id}`} onClick={(e) => e.stopPropagation()}>
+              <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+            </Link>
             <div style={{ flex: 1 }}>
               <div className="author-name">
                 {comment.body.startsWith('AI_SUMMARY:')
-                  ? <span className="ai-summary-label">✦ AI Summary</span>
-                  : author?.name}
+                  ? <span className="ai-summary-label">&#10022; AI Summary</span>
+                  : <Link to={`/user/${author?.id}`} className="author-name-link">{author?.name}</Link>}
               </div>
               <div className="meta-line">
                 {comment.body.startsWith('AI_SUMMARY:') ? 'Auto-generated from community responses' : `@${author?.username} · ${formatDate(comment.createdAt)}`}
@@ -574,9 +576,11 @@ export function ThreadPage() {
       <article className="thread-hero">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div className="author-row">
-            <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+            <Link to={`/user/${author?.id}`} onClick={(e) => e.stopPropagation()}>
+              <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
+            </Link>
             <div>
-              <div className="author-name">{author?.name}</div>
+              <Link to={`/user/${author?.id}`} className="author-name">{author?.name}</Link>
               <div className="meta-line">
                 {formatDate(post.createdAt)}
               </div>
