@@ -129,6 +129,10 @@ export function HomePage() {
   const needsYouPosts = getNeedsYouPosts(posts, demoUserId)
   const [replies, setReplies] = useState<Record<string, string>>({})
   const [submitted, setSubmitted] = useState<Record<string, string>>({})
+  const [pollVote, setPollVote] = useState<string | null>(null)
+  const [pollCounts, setPollCounts] = useState<Record<string, number>>({})
+  const [followedPostReply, setFollowedPostReply] = useState('')
+  const [followedPostSubmitted, setFollowedPostSubmitted] = useState<string | null>(null)
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [reviewDrafts, setReviewDrafts] = useState<Record<string, string>>({})
   const [reviewSubmitted, setReviewSubmitted] = useState<Record<string, string>>({})
@@ -195,6 +199,174 @@ export function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ── AMA Promo Card ── */}
+      {(() => {
+        const amaPost = posts.find((p) => p.id === 'post-ama-001')
+        if (!amaPost?.amaExpert) return null
+        const expert = amaPost.amaExpert
+        const amaDate = new Date(expert.scheduledAt)
+        const isLive = Date.now() >= amaDate.getTime()
+        return (
+          <section className="section-block ama-promo-card">
+            <div className="ama-promo-eyebrow">
+              <span className={`ama-live-badge${isLive ? ' ama-live-badge--live' : ''}`}>
+                {isLive ? 'Live now' : 'Upcoming AMA'}
+              </span>
+            </div>
+            <div className="ama-promo-body">
+              <img src={expert.avatar} alt={expert.name} className="ama-promo-avatar" />
+              <div className="ama-promo-info">
+                <strong className="ama-promo-name">{expert.name}</strong>
+                <span className="ama-promo-title">{expert.title}</span>
+                <span className="ama-promo-speciality">{expert.speciality}</span>
+                <div className="ama-promo-meta">
+                  <span>{amaDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} &middot; {amaDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span>{amaPost.commentCount} questions asked</span>
+                </div>
+              </div>
+            </div>
+            <Link to={`/feed/${amaPost.id}`} className="primary-button ama-promo-cta">
+              {isLive ? 'Join the AMA now' : 'Ask a question'}
+            </Link>
+          </section>
+        )
+      })()}
+
+      {/* ── Poll Promo Card ── */}
+      {(() => {
+        const pollPost = posts.find((p) => p.id === 'post-poll-001')
+        if (!pollPost?.pollOptions) return null
+        const options = pollPost.pollOptions
+        const totalVotes = options.reduce((s, o) => s + o.votes, 0) + Object.values(pollCounts).reduce((s, v) => s + v, 0)
+        const hasVoted = pollVote !== null
+        return (
+          <section className="section-block poll-promo-card">
+            <span className="section-kicker">Community Poll</span>
+            <h2 className="poll-promo-question">{pollPost.title}</h2>
+            <div className="poll-promo-options">
+              {options.map((opt) => {
+                const myExtra = pollCounts[opt.id] ?? 0
+                const count = opt.votes + myExtra
+                const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0
+                const isChosen = pollVote === opt.id
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    className={`poll-option-btn${isChosen ? ' poll-option-btn--chosen' : ''}`}
+                    onClick={() => {
+                      if (hasVoted) return
+                      setPollVote(opt.id)
+                      setPollCounts((prev) => ({ ...prev, [opt.id]: (prev[opt.id] ?? 0) + 1 }))
+                    }}
+                    disabled={hasVoted}
+                  >
+                    <span className="poll-option-label">{opt.label}</span>
+                    {hasVoted && (
+                      <>
+                        <div className="poll-option-bar" style={{ width: `${pct}%` }} />
+                        <span className="poll-option-pct">{pct}%</span>
+                      </>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+            {!hasVoted && <p className="poll-vote-hint">Vote to see results</p>}
+            {hasVoted && <p className="poll-total-hint">{totalVotes.toLocaleString()} votes total</p>}
+            <Link to={`/feed/${pollPost.id}`} className="inline-link poll-promo-cta">
+              <MessageCircle size={14} /> Join the conversation
+            </Link>
+          </section>
+        )
+      })()}
+
+      {/* ── Followed product post card ── */}
+      {(() => {
+        const fp = posts.find((p) => p.id === 'post-followed-001')
+        if (!fp) return null
+        const fpAuthor = users.find((u) => u.id === fp.authorId)
+        const fpProduct = products.find((p) => p.id === fp.productId)
+        const fpComments = allComments.filter((c) => c.postId === fp.id).slice(0, 2)
+        return (
+          <section className="section-block followed-post-card">
+            <div className="followed-post-eyebrow">
+              <img src={fpAuthor?.avatar} alt={fpAuthor?.name} className="avatar-xs" />
+              <span>
+                <strong>{fpAuthor?.name}</strong> posted about{' '}
+                <strong>{fpProduct?.name ?? fp.brand}</strong>
+              </span>
+            </div>
+            <Link to={`/feed/${fp.id}`} className="followed-post-main">
+              <strong className="followed-post-title">{fp.title}</strong>
+              <p className="followed-post-desc">{fp.description}</p>
+              {fp.image && <img src={fp.image} alt={fp.title} className="followed-post-image" />}
+              <div className="followed-post-stats">
+                <span><ThumbsUp size={13} /> {fp.upvotes}</span>
+                <span><MessageCircle size={13} /> {fp.commentCount} comments</span>
+              </div>
+            </Link>
+            {fpComments.length > 0 && (
+              <div className="followed-post-comments">
+                {fpComments.map((c) => {
+                  const ca = users.find((u) => u.id === c.authorId)
+                  return (
+                    <div key={c.id} className="followed-post-comment">
+                      <img src={ca?.avatar} alt={ca?.name} className="avatar-xs" />
+                      <p>{c.body.length > 100 ? c.body.slice(0, 100) + '...' : c.body}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+            <div className="followed-post-compose">
+              {followedPostSubmitted ? (
+                <div className="followed-post-submitted">
+                  <span>Your comment was added.</span>
+                  <Link to={`/feed/${fp.id}`} className="needs-you-join-nudge">
+                    <MessageCircle size={13} /> Join discussion
+                  </Link>
+                </div>
+              ) : (
+                <div className="needs-you-reply-row">
+                  <img src={user?.avatar} alt={user?.name} className="avatar-xs" />
+                  <textarea
+                    className="needs-you-textarea"
+                    rows={2}
+                    placeholder="Add a comment..."
+                    value={followedPostReply}
+                    onChange={(e) => setFollowedPostReply(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && followedPostReply.trim()) {
+                        createComment.mutateAsync({ postId: fp.id, authorId: demoUserId, body: followedPostReply.trim(), parentId: null })
+                        setFollowedPostSubmitted(followedPostReply.trim())
+                        setFollowedPostReply('')
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="needs-you-send"
+                    disabled={!followedPostReply.trim() || createComment.isPending}
+                    onClick={async () => {
+                      if (!followedPostReply.trim()) return
+                      await createComment.mutateAsync({ postId: fp.id, authorId: demoUserId, body: followedPostReply.trim(), parentId: null })
+                      setFollowedPostSubmitted(followedPostReply.trim())
+                      setFollowedPostReply('')
+                    }}
+                  >
+                    <Send size={15} />
+                  </button>
+                </div>
+              )}
+            </div>
+            <Link to={`/feed/${fp.id}`} className="followed-post-cta">
+              Join discussion
+            </Link>
+          </section>
+        )
+      })()}
 
       {/* ── Module 2: Products people are talking about ── */}
       {communityProducts.length > 0 && (

@@ -57,6 +57,12 @@ export interface Product {
   newLaunch?: boolean
 }
 
+export interface PollOption {
+  id: string
+  label: string
+  votes: number
+}
+
 export interface Post {
   id: string
   authorId: string
@@ -72,6 +78,14 @@ export interface Post {
   createdAt: string
   isPinnedSummary?: boolean
   rating?: number
+  pollOptions?: PollOption[]
+  amaExpert?: {
+    name: string
+    title: string
+    avatar: string
+    speciality: string
+    scheduledAt: string
+  }
 }
 
 export interface Comment {
