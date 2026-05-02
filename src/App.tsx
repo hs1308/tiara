@@ -3,7 +3,6 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useSearchParams } fr
 import type { Location as RouterLocation } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { CreatePostForm } from './components/create-post/CreatePostForm'
-import type { PostType } from './types'
 
 const HomePage = lazy(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })))
 const FeedPage = lazy(() => import('./pages/FeedPage').then((module) => ({ default: module.FeedPage })))
@@ -24,7 +23,6 @@ function App() {
   const [searchParams] = useSearchParams()
   const state = location.state as { backgroundLocation?: RouterLocation } | null
   const backgroundLocation = state?.backgroundLocation
-  const modalType = (searchParams.get('type') as PostType | null) ?? 'Product Talk'
   const modalProductId = searchParams.get('productId')
 
   return (
@@ -56,7 +54,6 @@ function App() {
                 <div className="modal-dialog" onClick={(event) => event.stopPropagation()}>
                   <CreatePostForm
                     productId={modalProductId}
-                    defaultType={modalType}
                     modal
                     onCancel={() => navigate(-1)}
                     onSuccess={(postId) => navigate(`/feed/${postId}`, { replace: true })}
