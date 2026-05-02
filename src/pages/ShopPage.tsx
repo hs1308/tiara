@@ -4,8 +4,6 @@ import { FilterDropdown } from '../components/ui/FilterDropdown'
 import { useAddToCart, useBrands, useProducts } from '../hooks/useTiaraData'
 import { brandSlug } from '../lib/utils'
 
-// ── Filter / sort options ─────────────────────────────────────────
-
 const SORT_OPTIONS = [
   { value: 'popular',    label: 'Most popular' },
   { value: 'community',  label: 'Highest community score' },
@@ -24,14 +22,14 @@ const CATEGORY_OPTIONS = [
 ]
 
 const CONCERN_OPTIONS = [
-  { value: 'acne',        label: 'Acne' },
-  { value: 'pigmentation',label: 'Pigmentation' },
-  { value: 'dark circles',label: 'Dark circles' },
-  { value: 'dry skin',    label: 'Dry skin' },
-  { value: 'oily skin',   label: 'Oily skin' },
-  { value: 'sensitive',   label: 'Sensitive skin' },
-  { value: 'frizz',       label: 'Frizz' },
-  { value: 'hair fall',   label: 'Hair fall' },
+  { value: 'acne',         label: 'Acne' },
+  { value: 'pigmentation', label: 'Pigmentation' },
+  { value: 'dark circles', label: 'Dark circles' },
+  { value: 'dry skin',     label: 'Dry skin' },
+  { value: 'oily skin',    label: 'Oily skin' },
+  { value: 'sensitive',    label: 'Sensitive skin' },
+  { value: 'frizz',        label: 'Frizz' },
+  { value: 'hair fall',    label: 'Hair fall' },
 ]
 
 const INGREDIENT_OPTIONS = [
@@ -52,24 +50,22 @@ const INGREDIENT_OPTIONS = [
   { value: 'bha',             label: 'BHA' },
 ]
 
-// ── Brand community summaries (derived from posts + comments) ─────
 const BRAND_SUMMARIES: Record<string, string> = {
-  'Dot & Key':     'Community loves how well it holds up in humid Indian summers. Occasional gripe that it feels lightweight for very dry skin.',
-  'Kay Beauty':    'Consistently praised for having the best shade range for South Asian skin. Community favourite for concealer and lip liners.',
-  'Minimalist':    'Highly trusted for transparent ingredient labels and honest concentrations. Community recommends the serums, less so the cleansers.',
-  'The Ordinary':  'Great value for actives. Community finds the range overwhelming but the individual products reliable once you know what to get.',
-  'Anomaly':       'Loved for curly and wavy Indian hair. Community notes visible bond-repair results, but wants more haircare variety from the brand.',
-  'Sol de Janeiro':'Known as a compliment magnet. Community thinks it\'s pricey for a body mist but says the scent is worth every rupee.',
-  'Pilgrim':       'Appreciated for Indian skin-specific formulations. Community says results are real but slower than premium alternatives.',
-  'Plum':          'Beloved for cruelty-free, affordable basics. Community recommends for beginners but wants stronger actives from the brand.',
+  'Dot & Key':      'Community loves how well it holds up in humid Indian summers. Occasional gripe that it feels lightweight for very dry skin.',
+  'Kay Beauty':     'Consistently praised for the best shade range for South Asian skin. Community favourite for concealer and lip liners.',
+  'Minimalist':     'Highly trusted for transparent ingredient labels and honest concentrations. Community recommends the serums, less so the cleansers.',
+  'The Ordinary':   'Great value for actives. Community finds the range overwhelming but individual products are reliable once you know what to get.',
+  'Anomaly':        'Loved for curly and wavy Indian hair. Community notes visible bond-repair results, but wants more haircare variety from the brand.',
+  'Sol de Janeiro': "Known as a compliment magnet. Community thinks it's pricey for a body mist but says the scent is worth every rupee.",
+  'Pilgrim':        'Appreciated for Indian skin-specific formulations. Community says results are real but slower than premium alternatives.',
+  'Plum':           'Beloved for cruelty-free, affordable basics. Community recommends for beginners but wants stronger actives from the brand.',
 }
 
-// ── Product community bullet points (derived from posts + comments) ──
 const PRODUCT_BULLETS: Record<string, [string, string, string]> = {
   'product-dot-key-sunscreen': [
-    'Doesn\'t pill over moisturiser — passes the Mumbai auto ride test',
+    "Doesn't pill over moisturiser -- passes the Mumbai auto ride test",
     'No white cast, dries matte, works well for oily and combination skin',
-    'Reapplication over makeup is tricky without a setting spray',
+    'Reapplication over makeup can be tricky without a setting spray',
   ],
   'product-kay-beauty-concealer': [
     'Best peach undertone for South Asian skin without a separate colour corrector',
@@ -77,34 +73,34 @@ const PRODUCT_BULLETS: Record<string, [string, string, string]> = {
     'Loved by MUAs for bridal and editorial looks on deeper skin tones',
   ],
   'product-minimalist-serum': [
-    'Visibly fades acne marks and pigmentation in 6–8 weeks of consistent use',
-    'Community's top pick for oily skin — controls shine and tightens pores',
-    'May cause a purge in the first 2 weeks — push through, it\'s worth it',
+    'Visibly fades acne marks and pigmentation in 6-8 weeks of consistent use',
+    "Community's top pick for oily skin -- controls shine and tightens pores",
+    "May cause a purge in the first 2 weeks -- push through, it's worth it",
   ],
   'product-ordinary-lip-balm': [
     'One of few balms that actually repairs chronically dry lips vs just coating',
-    'Works as a matte lip base — apply, blot, then apply lipstick on top',
-    'Lightly scented, no flavour, unisex — great for everyday use',
+    'Works as a matte lip base -- apply, blot, then apply lipstick on top',
+    'Lightly scented, no flavour, unisex -- great for everyday use',
   ],
   'product-anomaly-mask': [
     'Noticeably reduces frizz in wavy and curly Indian hair after hard water days',
-    'Best used as a pre-shampoo treatment — penetrates better on dry or damp hair',
+    'Best used as a pre-shampoo treatment -- penetrates better on dry or damp hair',
     'Community pairs it with an oil pre-treatment for maximum bond repair',
   ],
   'product-sdj-mist': [
     'Gets the most unsolicited compliments of any fragrance in the community',
-    'Lasts 3–4 hours in humid heat — layer over the matching lotion for longer wear',
-    'Community agrees it\'s pricey but calls it the most giftable beauty item',
+    'Lasts 3-4 hours in humid heat -- layer over the matching lotion for longer wear',
+    "Community agrees it's pricey but calls it the most giftable beauty item",
   ],
   'product-ordinary-caffeine': [
     'Reduces under-eye puffiness noticeably within 2 weeks for most users',
-    'Not a miracle for deep melanin-driven dark circles — better for puffiness',
+    'Not a miracle for deep melanin-driven dark circles -- better for puffiness',
     'Excellent lightweight texture that layers cleanly under SPF',
   ],
   'product-pilgrim-eye-serum': [
     'Kojic acid + Vitamin C combo specifically targets melanin pigmentation',
-    'Community recommends for South Asian skin tones with brown-type circles',
-    'Needs 8+ weeks to show results — consistency is key',
+    'Community recommends for South Asian skin tones with brown-type dark circles',
+    'Needs 8+ weeks to show results -- consistency is key',
   ],
   'product-plum-eye-gel': [
     'Loved for being lightweight and non-greasy under makeup',
@@ -112,8 +108,6 @@ const PRODUCT_BULLETS: Record<string, [string, string, string]> = {
     'Great value entry point for under-eye care for all skin types',
   ],
 }
-
-// ── Sentiment helpers ─────────────────────────────────────────────
 
 function sentimentFromScore(score: number, id: string): number {
   const jitter = (id.charCodeAt(id.length - 1) % 10) - 5
@@ -133,38 +127,30 @@ function brandSentiment(brandName: string, products: { brand: string; communityS
   return sentimentFromScore(avg, brandName)
 }
 
-// ── Brand logo / avatar ───────────────────────────────────────────
-
-// Curated brand logo images from Unsplash that tonally match each brand
 const BRAND_LOGOS: Record<string, string> = {
-  'Dot & Key':     'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=80&q=80',
-  'Kay Beauty':    'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=80&q=80',
-  'Minimalist':    'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?auto=format&fit=crop&w=80&q=80',
-  'The Ordinary':  'https://images.unsplash.com/photo-1556228578-dd6c7935df10?auto=format&fit=crop&w=80&q=80',
-  'Anomaly':       'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=80&q=80',
-  'Sol de Janeiro':'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=80&q=80',
-  'Pilgrim':       'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=80&q=80',
-  'Plum':          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=80&q=80',
+  'Dot & Key':      'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=80&q=80',
+  'Kay Beauty':     'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=80&q=80',
+  'Minimalist':     'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?auto=format&fit=crop&w=80&q=80',
+  'The Ordinary':   'https://images.unsplash.com/photo-1556228578-dd6c7935df10?auto=format&fit=crop&w=80&q=80',
+  'Anomaly':        'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=80&q=80',
+  'Sol de Janeiro': 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=80&q=80',
+  'Pilgrim':        'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=80&q=80',
+  'Plum':           'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=80&q=80',
 }
 
 function BrandAvatar({ name }: { name: string }) {
   const logo = BRAND_LOGOS[name]
-  if (logo) {
-    return <img src={logo} alt={name} className="discover-brand-logo" />
-  }
+  if (logo) return <img src={logo} alt={name} className="discover-brand-logo" />
   const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
   return <div className="discover-brand-initials">{initials}</div>
 }
-
-// ── Main page ─────────────────────────────────────────────────────
 
 export function ShopPage() {
   const [params, setParams] = useSearchParams()
   const navigate = useNavigate()
   const { data: products = [] } = useProducts()
   const { data: brands = [] } = useBrands()
-  const addToCart = useAddToCart()
-  void addToCart // available for cart actions if needed
+  useAddToCart() // keep hook alive for future cart actions
 
   const category   = params.get('category')   || ''
   const brand      = params.get('brand')       || ''
@@ -181,7 +167,6 @@ export function ShopPage() {
 
   const brandOptions = [...new Set(products.map((p) => p.brand))].map((b) => ({ value: b, label: b }))
 
-  // ── Filter + sort ───────────────────────────────────────────────
   const filtered = products
     .filter((p) => {
       if (category && p.category !== category) return false
@@ -209,7 +194,7 @@ export function ShopPage() {
   return (
     <div className="page-stack">
 
-      {/* ── Brand carousel ─────────────────────────────────────── */}
+      {/* Brand carousel */}
       <section className="section-block discover-brands-section">
         <div className="section-head">
           <div>
@@ -217,23 +202,17 @@ export function ShopPage() {
             <h2>Popular brands</h2>
           </div>
         </div>
-
         <div className="discover-brands-rail">
           {brands.map((b) => {
             const pct = brandSentiment(b.name, products)
             const colour = sentimentColour(pct)
             const isActive = brand === b.name
-            const summary = BRAND_SUMMARIES[b.name] ?? 'Community is actively discussing this brand\'s products.'
-
+            const summary = BRAND_SUMMARIES[b.name] ?? "Community is actively discussing this brand's products."
             return (
               <Link
                 key={b.id}
                 to={`/brand/${brandSlug(b.name)}`}
                 className={`discover-brand-card${isActive ? ' discover-brand-card--active' : ''}`}
-                onClick={(e) => {
-                  // If clicking to filter, prevent nav; otherwise go to brand page
-                  if (e.ctrlKey || e.metaKey) return
-                }}
               >
                 <BrandAvatar name={b.name} />
                 <span className="discover-brand-name">{b.name}</span>
@@ -247,12 +226,11 @@ export function ShopPage() {
         </div>
       </section>
 
-      {/* ── Products header + filters ───────────────────────────── */}
+      {/* Filters */}
       <section className="section-block section-tight feed-header-section">
         <div className="section-head" style={{ marginBottom: 0 }}>
           <h2 className="feed-page-title">Popular products</h2>
         </div>
-
         <div className="feed-filter-bar">
           <FilterDropdown
             label="Sort"
@@ -262,41 +240,16 @@ export function ShopPage() {
             allLabel="Most popular"
           />
           <div className="feed-filter-divider" />
-          <FilterDropdown
-            label="Category"
-            value={category}
-            options={CATEGORY_OPTIONS}
-            onChange={(v) => setParam('category', v)}
-          />
-          <FilterDropdown
-            label="Brand"
-            value={brand}
-            options={brandOptions}
-            onChange={(v) => setParam('brand', v)}
-          />
-          <FilterDropdown
-            label="Concern"
-            value={concern}
-            options={CONCERN_OPTIONS}
-            onChange={(v) => setParam('concern', v)}
-          />
-          <FilterDropdown
-            label="Ingredient"
-            value={ingredient}
-            options={INGREDIENT_OPTIONS}
-            onChange={(v) => setParam('ingredient', v)}
-          />
+          <FilterDropdown label="Category"   value={category}   options={CATEGORY_OPTIONS}   onChange={(v) => setParam('category', v)} />
+          <FilterDropdown label="Brand"      value={brand}      options={brandOptions}        onChange={(v) => setParam('brand', v)} />
+          <FilterDropdown label="Concern"    value={concern}    options={CONCERN_OPTIONS}     onChange={(v) => setParam('concern', v)} />
+          <FilterDropdown label="Ingredient" value={ingredient} options={INGREDIENT_OPTIONS}  onChange={(v) => setParam('ingredient', v)} />
           {activeFilterCount > 0 && (
-            <button
-              type="button"
-              className="feed-clear-filters"
-              onClick={() => setParams({ sort }, { replace: true })}
-            >
+            <button type="button" className="feed-clear-filters" onClick={() => setParams({ sort }, { replace: true })}>
               Clear {activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''}
             </button>
           )}
         </div>
-
         {activeFilterCount > 0 && (
           <p className="feed-filter-summary">
             {filtered.length} product{filtered.length !== 1 ? 's' : ''} matching your filters
@@ -304,34 +257,24 @@ export function ShopPage() {
         )}
       </section>
 
-      {/* ── Product grid ───────────────────────────────────────── */}
+      {/* Product grid */}
       {filtered.length > 0 ? (
         <div className="discover-product-grid">
           {filtered.map((product) => {
             const pct = sentimentFromScore(product.communityScore, product.id)
             const colour = sentimentColour(pct)
             const ingredients = Array.isArray(product.ingredients) ? product.ingredients : []
-            const bullets = PRODUCT_BULLETS[product.id] ?? [
+            const bullets: [string, string, string] = PRODUCT_BULLETS[product.id] ?? [
               `Rated ${product.rating}/5 by the community`,
               `${product.discussionCount} active discussions on Tiara`,
               `Community score: ${product.communityScore}/10`,
             ]
-
             return (
               <article key={product.id} className="discover-product-card">
-                {/* Image — 80% of original height */}
                 <Link to={`/product/${product.id}`} className="discover-product-image-wrap">
-                  <img
-                    src={product.heroImage}
-                    alt={product.name}
-                    className="discover-product-image"
-                  />
-                  {product.newLaunch && (
-                    <span className="discover-product-new-badge">New</span>
-                  )}
+                  <img src={product.heroImage} alt={product.name} className="discover-product-image" />
+                  {product.newLaunch && <span className="discover-product-new-badge">New</span>}
                 </Link>
-
-                {/* Body */}
                 <div className="discover-product-body">
                   <button
                     type="button"
@@ -340,45 +283,26 @@ export function ShopPage() {
                   >
                     {product.brand}
                   </button>
-
                   <Link to={`/product/${product.id}`}>
                     <h3 className="discover-product-name">{product.name}</h3>
                   </Link>
-
                   <p className="discover-product-desc">{product.description}</p>
-
                   {ingredients.length > 0 && (
                     <p className="discover-product-ingredients">
                       {ingredients.slice(0, 3).join(' · ')}
                     </p>
                   )}
-
-                  {/* Sentiment bar */}
                   <div className="discover-product-sentiment">
                     <div className="discover-sentiment-bar-track">
-                      <div
-                        className="discover-sentiment-bar-fill"
-                        style={{ width: `${pct}%`, background: colour }}
-                      />
+                      <div className="discover-sentiment-bar-fill" style={{ width: `${pct}%`, background: colour }} />
                     </div>
-                    <span className="discover-sentiment-label" style={{ color: colour }}>
-                      {pct}% positive
-                    </span>
+                    <span className="discover-sentiment-label" style={{ color: colour }}>{pct}% positive</span>
                   </div>
-
-                  {/* Community bullets */}
                   <ul className="discover-community-bullets">
-                    {bullets.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
+                    {bullets.map((bullet, i) => <li key={i}>{bullet}</li>)}
                   </ul>
-
-                  {/* See discussions link */}
-                  <Link
-                    to={`/feed?product=${product.id}`}
-                    className="discover-see-discussions"
-                  >
-                    See community discussions →
+                  <Link to={`/feed?product=${product.id}`} className="discover-see-discussions">
+                    See community discussions &rarr;
                   </Link>
                 </div>
               </article>
@@ -388,11 +312,7 @@ export function ShopPage() {
       ) : (
         <div className="empty-state">
           No products match these filters.{' '}
-          <button
-            type="button"
-            className="inline-link"
-            onClick={() => setParams({ sort }, { replace: true })}
-          >
+          <button type="button" className="inline-link" onClick={() => setParams({ sort }, { replace: true })}>
             Clear filters
           </button>
         </div>
