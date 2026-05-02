@@ -70,7 +70,7 @@ export function PostCard({ post, author, product, compact }: PostCardProps) {
           <div>
             <div className="author-name">{author?.name}</div>
             <div className="meta-line">
-              {post.type} · {formatDate(post.createdAt)}
+              {formatDate(post.createdAt)}
             </div>
           </div>
         </div>

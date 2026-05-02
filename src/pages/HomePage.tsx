@@ -177,7 +177,6 @@ export function HomePage() {
                   className="search-post-card"
                 >
                   <div className="search-post-top">
-                    <span className="tag-pill">{post.type}</span>
                     <div className="search-post-stats">
                       <ThumbsUp size={12} />
                       <span>{post.upvotes}</span>
@@ -314,7 +313,7 @@ export function HomePage() {
                     <div className="needs-you-meta">
                       <img src={author?.avatar} alt={author?.name} className="avatar-xs" />
                       <span className="needs-you-author">{author?.name}</span>
-                      <span className="tag-pill needs-you-type">{post.type}</span>
+
                     </div>
                     <p className="needs-you-title">{post.title}</p>
                     {tags.length > 0 && (

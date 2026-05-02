@@ -578,7 +578,7 @@ export function ThreadPage() {
             <div>
               <div className="author-name">{author?.name}</div>
               <div className="meta-line">
-                {post.type} · {formatDate(post.createdAt)}
+                {formatDate(post.createdAt)}
               </div>
             </div>
           </div>
