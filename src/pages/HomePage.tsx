@@ -152,9 +152,10 @@ export function HomePage() {
   return (
     <div className="page-stack">
 
-      {/* ── Module 1: Based on your recent search ── */}
+      {/* ── Module 1+2: Merged contextual section ── */}
       {contextualPosts.length > 0 && (
         <section className="section-block recent-search-module">
+          {/* Header */}
           <div className="recent-search-header">
             <div className="recent-search-meta">
               <span className="section-kicker">Based on your recent search</span>
@@ -171,15 +172,12 @@ export function HomePage() {
             </Link>
           </div>
 
+          {/* Discussions */}
           <div className="recent-search-posts">
             {contextualPosts.map((post) => {
               const author = users.find((u) => u.id === post.authorId)
               return (
-                <Link
-                  key={post.id}
-                  to={`/feed/${post.id}`}
-                  className="search-post-card"
-                >
+                <Link key={post.id} to={`/feed/${post.id}`} className="search-post-card">
                   <div className="search-post-top">
                     <div className="search-post-stats">
                       <ThumbsUp size={12} />
@@ -194,6 +192,86 @@ export function HomePage() {
                     <span>{author?.name}</span>
                   </div>
                 </Link>
+              )
+            })}
+          </div>
+
+          {/* Divider */}
+          <div className="contextual-divider">
+            <span>Recommended for {CONTEXTUAL_TOPIC}</span>
+          </div>
+
+          {/* Recommended products */}
+          <div className="contextual-products-list">
+            {communityProducts.map((product) => {
+              const match = getBestPostForProduct(product.id, posts, allComments)
+              const threadPost = match?.type === 'post' ? match.item
+                : match?.type === 'comment' ? match.post
+                : null
+              const snippet = match?.type === 'post'
+                ? match.item.title
+                : match?.type === 'comment'
+                ? match.item.body
+                : null
+              const snippetAuthor = match?.type === 'post'
+                ? users.find((u) => u.id === match.item.authorId)
+                : match?.type === 'comment'
+                ? users.find((u) => u.id === match.item.authorId)
+                : null
+              const upvotes = match?.type === 'post' ? match.item.upvotes
+                : match?.type === 'comment' ? match.item.upvotes
+                : 0
+
+              return (
+                <div key={product.id} className="contextual-product-row">
+                  {/* Product cell */}
+                  <Link to={`/product/${product.id}`} className="community-product-cell">
+                    <img src={product.heroImage} alt={product.name} className="community-product-image" />
+                    <div className="community-product-info">
+                      <span className="eyebrow">{product.brand}</span>
+                      <span className="community-product-name">{product.name}</span>
+                      <div className="community-product-meta">
+                        <span>★ {product.rating}</span>
+                        <span>{product.discussionCount} discussing</span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  {/* Community snippet */}
+                  <div className="contextual-product-middle">
+                    {threadPost && snippet ? (
+                      <Link to={`/feed/${threadPost.id}`} className="community-thread-cell">
+                        <p className="community-thread-snippet">
+                          &ldquo;{snippet.length > 100 ? snippet.slice(0, 100) + '…' : snippet}&rdquo;
+                        </p>
+                        <div className="community-thread-meta">
+                          {snippetAuthor && (
+                            <img src={snippetAuthor.avatar} alt={snippetAuthor.name} className="avatar-xs" />
+                          )}
+                          <span>{snippetAuthor?.name}</span>
+                          <span className="dot-sep">·</span>
+                          <ThumbsUp size={11} />
+                          <span>{upvotes}</span>
+                        </div>
+                      </Link>
+                    ) : (
+                      <Link to={`/feed?product=${product.id}`} className="community-thread-cell community-thread-empty">
+                        <span>See what the community is saying →</span>
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Ask a question CTA */}
+                  <div className="contextual-product-ask">
+                    <Link
+                      to={`/create?productId=${product.id}`}
+                      className="contextual-ask-btn"
+                    >
+                      <MessageCircle size={14} />
+                      Ask a question
+                    </Link>
+                  </div>
+                </div>
               )
             })}
           </div>
@@ -367,99 +445,6 @@ export function HomePage() {
           </section>
         )
       })()}
-
-      {/* ── Module 2: Products people are talking about ── */}
-      {communityProducts.length > 0 && (
-        <section className="section-block community-products-module">
-          <div className="section-head">
-            <div>
-              <span className="section-kicker">For you</span>
-              <h2>Products people are talking about</h2>
-            </div>
-            <Link
-              to={`/feed?problem=${encodeURIComponent(USER_CONCERNS[0])}`}
-              className="inline-link"
-            >
-              See more discussions
-            </Link>
-          </div>
-
-          <div className="community-products-table">
-            {communityProducts.map((product) => {
-              const match = getBestPostForProduct(product.id, posts, allComments)
-              const threadPost = match?.type === 'post' ? match.item
-                : match?.type === 'comment' ? match.post
-                : null
-              const snippet = match?.type === 'post'
-                ? match.item.title
-                : match?.type === 'comment'
-                ? match.item.body
-                : null
-              const snippetAuthor = match?.type === 'post'
-                ? users.find((u) => u.id === match.item.authorId)
-                : match?.type === 'comment'
-                ? users.find((u) => u.id === match.item.authorId)
-                : null
-              const upvotes = match?.type === 'post' ? match.item.upvotes
-                : match?.type === 'comment' ? match.item.upvotes
-                : 0
-
-              return (
-                <div key={product.id} className="community-product-row">
-                  {/* Left: product */}
-                  <Link to={`/product/${product.id}`} className="community-product-cell">
-                    <img
-                      src={product.heroImage}
-                      alt={product.name}
-                      className="community-product-image"
-                    />
-                    <div className="community-product-info">
-                      <span className="eyebrow">{product.brand}</span>
-                      <span className="community-product-name">{product.name}</span>
-                      <div className="community-product-meta">
-                        <span>★ {product.rating}</span>
-                        <span>{product.discussionCount} discussing</span>
-                      </div>
-                    </div>
-                  </Link>
-
-                  {/* Right: community thread */}
-                  {threadPost && snippet ? (
-                    <Link
-                      to={`/feed/${threadPost.id}`}
-                      className="community-thread-cell"
-                    >
-                      <p className="community-thread-snippet">
-                        &ldquo;{snippet.length > 120 ? snippet.slice(0, 120) + '…' : snippet}&rdquo;
-                      </p>
-                      <div className="community-thread-meta">
-                        {snippetAuthor && (
-                          <img
-                            src={snippetAuthor.avatar}
-                            alt={snippetAuthor.name}
-                            className="avatar-xs"
-                          />
-                        )}
-                        <span>{snippetAuthor?.name}</span>
-                        <span className="dot-sep">·</span>
-                        <ThumbsUp size={11} />
-                        <span>{upvotes}</span>
-                      </div>
-                    </Link>
-                  ) : (
-                    <Link
-                      to={`/feed?product=${product.id}`}
-                      className="community-thread-cell community-thread-empty"
-                    >
-                      <span>See what the community is saying →</span>
-                    </Link>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
 
       {/* ── Module 3: Your community needs you ── */}
       {needsYouPosts.length > 0 && (
