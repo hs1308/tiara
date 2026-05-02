@@ -197,9 +197,7 @@ function SmartTextarea({ value, onChange, placeholder, rows = 6, required }: Sma
           )}
         </div>
       )}
-      <p className="create-post-hint">
-        Type <code>@product</code> to tag a product · <code>@ingredient</code> to tag an ingredient
-      </p>
+
     </div>
   )
 }
@@ -435,7 +433,7 @@ function TagsSection({ tags, onChange }: { tags: string[]; onChange: (t: string[
           ✦ Auto-suggest
         </button>
       </div>
-      <p className="create-post-hint">Tags must be selected from the list · auto-suggested tags shown in green</p>
+
     </div>
   )
 }
@@ -570,7 +568,7 @@ export function CreatePostForm({
             <SmartTextarea
               value={description}
               onChange={setDescription}
-              placeholder="What worked, what surprised you? Use @product or @ingredient to tag something."
+              placeholder="What worked, what surprised you? Use @product, @ingredient or @brand to tag something."
               required
             />
           </div>

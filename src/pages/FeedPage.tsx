@@ -54,6 +54,24 @@ const WEATHER_OPTIONS = [
   { value: 'rainy', label: 'Rainy' },
 ]
 
+const INGREDIENT_OPTIONS = [
+  { value: 'niacinamide', label: 'Niacinamide' },
+  { value: 'vitamin c', label: 'Vitamin C' },
+  { value: 'retinol', label: 'Retinol' },
+  { value: 'hyaluronic acid', label: 'Hyaluronic acid' },
+  { value: 'salicylic acid', label: 'Salicylic acid' },
+  { value: 'glycerin', label: 'Glycerin' },
+  { value: 'ceramides', label: 'Ceramides' },
+  { value: 'aha', label: 'AHA' },
+  { value: 'bha', label: 'BHA' },
+  { value: 'caffeine', label: 'Caffeine' },
+  { value: 'kojic acid', label: 'Kojic acid' },
+  { value: 'tranexamic acid', label: 'Tranexamic acid' },
+  { value: 'squalane', label: 'Squalane' },
+  { value: 'peptides', label: 'Peptides' },
+  { value: 'zinc oxide', label: 'Zinc oxide' },
+]
+
 function matchesSearch(haystack: string, needle: string) {
   return haystack.toLowerCase().includes(needle.toLowerCase())
 }
@@ -68,6 +86,8 @@ export function FeedPage() {
   const brand = params.get('brand') || ''
   const problem = params.get('problem') || ''
   const weather = params.get('weather') || ''
+
+  const ingredient = params.get('ingredient') || ''
 
   const { data: posts = [] } = usePosts()
   const { data: users = [] } = useUsers()
@@ -124,10 +144,18 @@ export function FeedPage() {
     if (brand && post.brand !== brand && product?.brand !== brand) return false
     if (problem && !matchesSearch(allText, problem)) return false
     if (weather && !matchesSearch(allText, weather)) return false
+    if (ingredient) {
+      const ingredientText = [
+        post.description,
+        post.title,
+        ...(Array.isArray(product?.ingredients) ? product!.ingredients : []),
+      ].filter(Boolean).join(' ')
+      if (!matchesSearch(ingredientText, ingredient)) return false
+    }
     return true
   })
 
-  const activeFilterCount = [care, productType, productId, brand, problem, weather].filter(Boolean).length
+  const activeFilterCount = [care, productType, productId, brand, problem, weather, ingredient].filter(Boolean).length
 
   return (
     <div className="page-stack">
@@ -176,6 +204,12 @@ export function FeedPage() {
             value={problem}
             options={PROBLEM_OPTIONS}
             onChange={(v) => setParam('problem', v)}
+          />
+          <FilterDropdown
+            label="Ingredient"
+            value={ingredient}
+            options={INGREDIENT_OPTIONS}
+            onChange={(v) => setParam('ingredient', v)}
           />
           <FilterDropdown
             label="Weather"
