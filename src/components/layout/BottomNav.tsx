@@ -1,4 +1,4 @@
-import { Home, PlusSquare, ShoppingBag, UserRound, UsersRound } from 'lucide-react'
+import { Compass, Home, PlusSquare, UserRound, UsersRound } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 
@@ -6,7 +6,7 @@ const items = [
   { to: '/', label: 'Home', icon: Home },
   { to: '/feed', label: 'Feed', icon: UsersRound },
   { to: '/create', label: 'Post', icon: PlusSquare, isCenter: true },
-  { to: '/shop', label: 'Shop', icon: ShoppingBag },
+  { to: '/shop', label: 'Discover', icon: Compass },
   { to: '/profile', label: 'Profile', icon: UserRound },
 ]
 
