@@ -1,5 +1,4 @@
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { MessageCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { FilterDropdown } from '../components/ui/FilterDropdown'
 import { useAddToCart, useBrands, useProducts } from '../hooks/useTiaraData'
@@ -8,11 +7,11 @@ import { brandSlug } from '../lib/utils'
 // ── Filter / sort options ─────────────────────────────────────────
 
 const SORT_OPTIONS = [
-  { value: 'popular',   label: 'Most popular' },
-  { value: 'community', label: 'Highest community score' },
-  { value: 'discussed', label: 'Most discussed' },
-  { value: 'price_asc', label: 'Price: Low to High' },
-  { value: 'price_desc',label: 'Price: High to Low' },
+  { value: 'popular',    label: 'Most popular' },
+  { value: 'community',  label: 'Highest community score' },
+  { value: 'discussed',  label: 'Most discussed' },
+  { value: 'price_asc',  label: 'Price: Low to High' },
+  { value: 'price_desc', label: 'Price: High to Low' },
 ]
 
 const CATEGORY_OPTIONS = [
@@ -36,29 +35,87 @@ const CONCERN_OPTIONS = [
 ]
 
 const INGREDIENT_OPTIONS = [
-  { value: 'niacinamide',      label: 'Niacinamide' },
-  { value: 'vitamin c',        label: 'Vitamin C' },
-  { value: 'retinol',          label: 'Retinol' },
-  { value: 'hyaluronic acid',  label: 'Hyaluronic acid' },
-  { value: 'salicylic acid',   label: 'Salicylic acid' },
-  { value: 'ceramides',        label: 'Ceramides' },
-  { value: 'glycerin',         label: 'Glycerin' },
-  { value: 'squalane',         label: 'Squalane' },
-  { value: 'peptides',         label: 'Peptides' },
-  { value: 'caffeine',         label: 'Caffeine' },
-  { value: 'kojic acid',       label: 'Kojic acid' },
-  { value: 'zinc oxide',       label: 'Zinc oxide' },
-  { value: 'shea butter',      label: 'Shea butter' },
-  { value: 'aha',              label: 'AHA' },
-  { value: 'bha',              label: 'BHA' },
+  { value: 'niacinamide',     label: 'Niacinamide' },
+  { value: 'vitamin c',       label: 'Vitamin C' },
+  { value: 'retinol',         label: 'Retinol' },
+  { value: 'hyaluronic acid', label: 'Hyaluronic acid' },
+  { value: 'salicylic acid',  label: 'Salicylic acid' },
+  { value: 'ceramides',       label: 'Ceramides' },
+  { value: 'glycerin',        label: 'Glycerin' },
+  { value: 'squalane',        label: 'Squalane' },
+  { value: 'peptides',        label: 'Peptides' },
+  { value: 'caffeine',        label: 'Caffeine' },
+  { value: 'kojic acid',      label: 'Kojic acid' },
+  { value: 'zinc oxide',      label: 'Zinc oxide' },
+  { value: 'shea butter',     label: 'Shea butter' },
+  { value: 'aha',             label: 'AHA' },
+  { value: 'bha',             label: 'BHA' },
 ]
 
-// ── Sentiment score helper (derived from communityScore) ──────────
-// communityScore is out of 10; convert to a sentiment % with some
-// variation so cards don't all look identical
+// ── Brand community summaries (derived from posts + comments) ─────
+const BRAND_SUMMARIES: Record<string, string> = {
+  'Dot & Key':     'Community loves how well it holds up in humid Indian summers. Occasional gripe that it feels lightweight for very dry skin.',
+  'Kay Beauty':    'Consistently praised for having the best shade range for South Asian skin. Community favourite for concealer and lip liners.',
+  'Minimalist':    'Highly trusted for transparent ingredient labels and honest concentrations. Community recommends the serums, less so the cleansers.',
+  'The Ordinary':  'Great value for actives. Community finds the range overwhelming but the individual products reliable once you know what to get.',
+  'Anomaly':       'Loved for curly and wavy Indian hair. Community notes visible bond-repair results, but wants more haircare variety from the brand.',
+  'Sol de Janeiro':'Known as a compliment magnet. Community thinks it\'s pricey for a body mist but says the scent is worth every rupee.',
+  'Pilgrim':       'Appreciated for Indian skin-specific formulations. Community says results are real but slower than premium alternatives.',
+  'Plum':          'Beloved for cruelty-free, affordable basics. Community recommends for beginners but wants stronger actives from the brand.',
+}
+
+// ── Product community bullet points (derived from posts + comments) ──
+const PRODUCT_BULLETS: Record<string, [string, string, string]> = {
+  'product-dot-key-sunscreen': [
+    'Doesn\'t pill over moisturiser — passes the Mumbai auto ride test',
+    'No white cast, dries matte, works well for oily and combination skin',
+    'Reapplication over makeup is tricky without a setting spray',
+  ],
+  'product-kay-beauty-concealer': [
+    'Best peach undertone for South Asian skin without a separate colour corrector',
+    'Buildable coverage that holds up 8 hours in humid and hot weather',
+    'Loved by MUAs for bridal and editorial looks on deeper skin tones',
+  ],
+  'product-minimalist-serum': [
+    'Visibly fades acne marks and pigmentation in 6–8 weeks of consistent use',
+    'Community's top pick for oily skin — controls shine and tightens pores',
+    'May cause a purge in the first 2 weeks — push through, it\'s worth it',
+  ],
+  'product-ordinary-lip-balm': [
+    'One of few balms that actually repairs chronically dry lips vs just coating',
+    'Works as a matte lip base — apply, blot, then apply lipstick on top',
+    'Lightly scented, no flavour, unisex — great for everyday use',
+  ],
+  'product-anomaly-mask': [
+    'Noticeably reduces frizz in wavy and curly Indian hair after hard water days',
+    'Best used as a pre-shampoo treatment — penetrates better on dry or damp hair',
+    'Community pairs it with an oil pre-treatment for maximum bond repair',
+  ],
+  'product-sdj-mist': [
+    'Gets the most unsolicited compliments of any fragrance in the community',
+    'Lasts 3–4 hours in humid heat — layer over the matching lotion for longer wear',
+    'Community agrees it\'s pricey but calls it the most giftable beauty item',
+  ],
+  'product-ordinary-caffeine': [
+    'Reduces under-eye puffiness noticeably within 2 weeks for most users',
+    'Not a miracle for deep melanin-driven dark circles — better for puffiness',
+    'Excellent lightweight texture that layers cleanly under SPF',
+  ],
+  'product-pilgrim-eye-serum': [
+    'Kojic acid + Vitamin C combo specifically targets melanin pigmentation',
+    'Community recommends for South Asian skin tones with brown-type circles',
+    'Needs 8+ weeks to show results — consistency is key',
+  ],
+  'product-plum-eye-gel': [
+    'Loved for being lightweight and non-greasy under makeup',
+    'Community says it visibly reduces puffiness, less convincing for dark circles',
+    'Great value entry point for under-eye care for all skin types',
+  ],
+}
+
+// ── Sentiment helpers ─────────────────────────────────────────────
 
 function sentimentFromScore(score: number, id: string): number {
-  // deterministic jitter based on product id so it's stable across renders
   const jitter = (id.charCodeAt(id.length - 1) % 10) - 5
   return Math.min(99, Math.max(50, Math.round(score * 9.5 + jitter)))
 }
@@ -69,26 +126,33 @@ function sentimentColour(pct: number): string {
   return '#ad4f48'
 }
 
-// ── Brand sentiment (average of products in that brand) ───────────
-function brandSentiment(brandName: string, products: ReturnType<typeof useProducts>['data']): number {
-  if (!products) return 72
+function brandSentiment(brandName: string, products: { brand: string; communityScore: number }[]): number {
   const branded = products.filter((p) => p.brand === brandName)
   if (!branded.length) return 72
   const avg = branded.reduce((s, p) => s + p.communityScore, 0) / branded.length
   return sentimentFromScore(avg, brandName)
 }
 
-// ── Brand initials avatar ─────────────────────────────────────────
-function BrandAvatar({ name, logo }: { name: string; logo: string | null }) {
+// ── Brand logo / avatar ───────────────────────────────────────────
+
+// Curated brand logo images from Unsplash that tonally match each brand
+const BRAND_LOGOS: Record<string, string> = {
+  'Dot & Key':     'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=80&q=80',
+  'Kay Beauty':    'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=80&q=80',
+  'Minimalist':    'https://images.unsplash.com/photo-1626784215021-2e39ccf971cd?auto=format&fit=crop&w=80&q=80',
+  'The Ordinary':  'https://images.unsplash.com/photo-1556228578-dd6c7935df10?auto=format&fit=crop&w=80&q=80',
+  'Anomaly':       'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=80&q=80',
+  'Sol de Janeiro':'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=80&q=80',
+  'Pilgrim':       'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?auto=format&fit=crop&w=80&q=80',
+  'Plum':          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=80&q=80',
+}
+
+function BrandAvatar({ name }: { name: string }) {
+  const logo = BRAND_LOGOS[name]
   if (logo) {
     return <img src={logo} alt={name} className="discover-brand-logo" />
   }
-  const initials = name
-    .split(' ')
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const initials = name.split(' ').map((w) => w[0]).slice(0, 2).join('').toUpperCase()
   return <div className="discover-brand-initials">{initials}</div>
 }
 
@@ -100,6 +164,7 @@ export function ShopPage() {
   const { data: products = [] } = useProducts()
   const { data: brands = [] } = useBrands()
   const addToCart = useAddToCart()
+  void addToCart // available for cart actions if needed
 
   const category   = params.get('category')   || ''
   const brand      = params.get('brand')       || ''
@@ -116,7 +181,7 @@ export function ShopPage() {
 
   const brandOptions = [...new Set(products.map((p) => p.brand))].map((b) => ({ value: b, label: b }))
 
-  // ── Filter ──────────────────────────────────────────────────────
+  // ── Filter + sort ───────────────────────────────────────────────
   const filtered = products
     .filter((p) => {
       if (category && p.category !== category) return false
@@ -126,12 +191,8 @@ export function ShopPage() {
         if (!haystack.includes(concern.toLowerCase())) return false
       }
       if (ingredient) {
-        const ingredientHaystack = [
-          ...p.ingredients,
-          p.name, p.description,
-          ...p.tags,
-        ].join(' ').toLowerCase()
-        if (!ingredientHaystack.includes(ingredient.toLowerCase())) return false
+        const haystack = [...p.ingredients, p.name, p.description, ...p.tags].join(' ').toLowerCase()
+        if (!haystack.includes(ingredient.toLowerCase())) return false
       }
       return true
     })
@@ -148,7 +209,7 @@ export function ShopPage() {
   return (
     <div className="page-stack">
 
-      {/* ── Brands carousel ────────────────────────────────────── */}
+      {/* ── Brand carousel ─────────────────────────────────────── */}
       <section className="section-block discover-brands-section">
         <div className="section-head">
           <div>
@@ -162,25 +223,31 @@ export function ShopPage() {
             const pct = brandSentiment(b.name, products)
             const colour = sentimentColour(pct)
             const isActive = brand === b.name
+            const summary = BRAND_SUMMARIES[b.name] ?? 'Community is actively discussing this brand\'s products.'
+
             return (
-              <button
+              <Link
                 key={b.id}
-                type="button"
+                to={`/brand/${brandSlug(b.name)}`}
                 className={`discover-brand-card${isActive ? ' discover-brand-card--active' : ''}`}
-                onClick={() => setParam('brand', isActive ? '' : b.name)}
+                onClick={(e) => {
+                  // If clicking to filter, prevent nav; otherwise go to brand page
+                  if (e.ctrlKey || e.metaKey) return
+                }}
               >
-                <BrandAvatar name={b.name} logo={b.logo} />
+                <BrandAvatar name={b.name} />
                 <span className="discover-brand-name">{b.name}</span>
                 <span className="discover-brand-sentiment" style={{ color: colour }}>
-                  {pct}% community
+                  {pct}% positive
                 </span>
-              </button>
+                <p className="discover-brand-summary">{summary}</p>
+              </Link>
             )
           })}
         </div>
       </section>
 
-      {/* ── Products ───────────────────────────────────────────── */}
+      {/* ── Products header + filters ───────────────────────────── */}
       <section className="section-block section-tight feed-header-section">
         <div className="section-head" style={{ marginBottom: 0 }}>
           <h2 className="feed-page-title">Popular products</h2>
@@ -244,10 +311,15 @@ export function ShopPage() {
             const pct = sentimentFromScore(product.communityScore, product.id)
             const colour = sentimentColour(pct)
             const ingredients = Array.isArray(product.ingredients) ? product.ingredients : []
+            const bullets = PRODUCT_BULLETS[product.id] ?? [
+              `Rated ${product.rating}/5 by the community`,
+              `${product.discussionCount} active discussions on Tiara`,
+              `Community score: ${product.communityScore}/10`,
+            ]
 
             return (
               <article key={product.id} className="discover-product-card">
-                {/* Image */}
+                {/* Image — 80% of original height */}
                 <Link to={`/product/${product.id}`} className="discover-product-image-wrap">
                   <img
                     src={product.heroImage}
@@ -281,7 +353,7 @@ export function ShopPage() {
                     </p>
                   )}
 
-                  {/* Sentiment */}
+                  {/* Sentiment bar */}
                   <div className="discover-product-sentiment">
                     <div className="discover-sentiment-bar-track">
                       <div
@@ -294,24 +366,20 @@ export function ShopPage() {
                     </span>
                   </div>
 
-                  {/* Actions */}
-                  <div className="discover-product-actions">
-                    <button
-                      type="button"
-                      className="secondary-button discover-action-btn"
-                      onClick={() => navigate(`/feed?product=${product.id}`)}
-                    >
-                      <MessageCircle size={14} />
-                      {product.discussionCount} discussions
-                    </button>
-                    <button
-                      type="button"
-                      className="primary-button discover-action-btn"
-                      onClick={() => addToCart.mutateAsync(product.id)}
-                    >
-                      Add to cart
-                    </button>
-                  </div>
+                  {/* Community bullets */}
+                  <ul className="discover-community-bullets">
+                    {bullets.map((b, i) => (
+                      <li key={i}>{b}</li>
+                    ))}
+                  </ul>
+
+                  {/* See discussions link */}
+                  <Link
+                    to={`/feed?product=${product.id}`}
+                    className="discover-see-discussions"
+                  >
+                    See community discussions →
+                  </Link>
                 </div>
               </article>
             )

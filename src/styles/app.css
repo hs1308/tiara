@@ -4080,17 +4080,18 @@
 .discover-brand-card {
   flex-shrink: 0;
   scroll-snap-align: start;
-  width: 110px;
+  width: 160px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 16px 12px;
+  gap: 6px;
+  padding: 16px 14px;
   background: rgba(255, 255, 255, 0.88);
   border: 1px solid rgba(23, 50, 44, 0.09);
   border-radius: 20px;
   cursor: pointer;
   font: inherit;
+  text-decoration: none;
   transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
   text-align: center;
 }
@@ -4147,6 +4148,18 @@
   letter-spacing: 0.01em;
 }
 
+.discover-brand-summary {
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 4px 0 0;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
 /* ── Discover page: product grid ── */
 
 .discover-product-grid {
@@ -4185,7 +4198,7 @@
 .discover-product-image-wrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   display: block;
   background: rgba(248, 246, 242, 0.7);
@@ -4319,6 +4332,34 @@
   font-size: 0.78rem !important;
   gap: 4px !important;
   border-radius: 999px !important;
+}
+
+.discover-community-bullets {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.discover-community-bullets li {
+  font-size: 0.78rem;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.discover-see-discussions {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  transition: opacity 150ms ease;
+}
+
+.discover-see-discussions:hover {
+  opacity: 0.7;
 }
 
 /* ── AI Summary pinned comment ── */
