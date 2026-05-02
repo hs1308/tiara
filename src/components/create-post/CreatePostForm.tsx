@@ -554,10 +554,10 @@ export function CreatePostForm({
             onChange={(e) => setTitle(e.target.value)}
             placeholder={
               mode === 'ama'
-                ? 'e.g. I'm a dermatologist — ask me anything about skincare'
+                ? "e.g. I'm a dermatologist — ask me anything about skincare"
                 : mode === 'poll'
                   ? 'What do you want to ask the community?'
-                  : 'What's on your mind?'
+                  : "What's on your mind?"
             }
             required
           />
