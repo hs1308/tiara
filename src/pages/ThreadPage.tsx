@@ -277,6 +277,114 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
   )
 }
 
+// ── Untagged product detector ────────────────────────────────────────────────
+
+// Maps informal product references (lowercase) to real product IDs + display names
+const UNTAGGED_PRODUCT_MAP: Array<{
+  patterns: string[]
+  productId: string
+  productName: string
+}> = [
+  {
+    patterns: ['dot and key watermelon', 'dot & key watermelon', 'watermelon sunscreen'],
+    productId: 'product-dot-key-sunscreen',
+    productName: 'Watermelon Cooling Sunscreen SPF 50',
+  },
+  {
+    patterns: ['kay beauty concealer', 'kay beauty hydrating', 'kb concealer'],
+    productId: 'product-kay-beauty-concealer',
+    productName: 'Kay Beauty Hydrating Concealer',
+  },
+  {
+    patterns: ['pilgrim vitamin c', 'pilgrim eye', 'pilgrim brightening'],
+    productId: 'product-pilgrim-eye-serum',
+    productName: 'Pilgrim Vitamin C Under Eye Brightening Serum',
+  },
+  {
+    patterns: ['ordinary caffeine', 'caffeine solution', 'caffeine serum'],
+    productId: 'product-ordinary-caffeine',
+    productName: 'Caffeine Solution 5% + EGCG',
+  },
+  {
+    patterns: ['minimalist niacinamide', 'minimalist serum', 'niacinamide serum'],
+    productId: 'product-minimalist-serum',
+    productName: '10% Niacinamide Face Serum',
+  },
+  {
+    patterns: ['plum eye', 'plum under eye', 'e-luminence'],
+    productId: 'product-plum-eye-gel',
+    productName: 'E-Luminence Simply Light Under Eye Gel Cream',
+  },
+]
+
+function detectUntaggedProducts(body: string): Array<{ productId: string; productName: string }> {
+  const lower = body.toLowerCase()
+  // Skip if the body already contains @-tagged product mentions
+  const results: Array<{ productId: string; productName: string }> = []
+  for (const entry of UNTAGGED_PRODUCT_MAP) {
+    if (entry.patterns.some((p) => lower.includes(p))) {
+      // Only suggest if not already @-tagged
+      if (!body.includes(`@${entry.productName}`)) {
+        results.push({ productId: entry.productId, productName: entry.productName })
+      }
+    }
+  }
+  return results
+}
+
+// ── AI Summary renderer (supports @product links) ─────────────────────────────
+
+function renderAISummaryBullet(text: string, products: Product[]): ReactNode[] {
+  const nodes: ReactNode[] = []
+  let remaining = text
+  let key = 0
+  while (remaining.length > 0) {
+    const atIdx = remaining.indexOf('@')
+    if (atIdx === -1) { nodes.push(remaining); break }
+    if (atIdx > 0) { nodes.push(remaining.slice(0, atIdx)); remaining = remaining.slice(atIdx) }
+    const afterAt = remaining.slice(1)
+    const product = products
+      .sort((a, b) => b.name.length - a.name.length)
+      .find((p) => afterAt.startsWith(p.name))
+    if (product) {
+      nodes.push(
+        <Link key={key++} to={`/product/${product.id}`} className="mention-link mention-link--product">
+          @{product.name}
+        </Link>
+      )
+      remaining = remaining.slice(1 + product.name.length)
+    } else {
+      nodes.push('@')
+      remaining = remaining.slice(1)
+    }
+  }
+  return nodes
+}
+
+// ── FindProductButton ────────────────────────────────────────────────────────────────────
+
+function FindProductButton({ productId, productName }: { productId: string; productName: string }) {
+  const [revealed, setRevealed] = useState(false)
+  if (revealed) {
+    return (
+      <Link to={`/product/${productId}`} className="find-product-revealed">
+        <ShoppingBag size={13} />
+        {productName}
+      </Link>
+    )
+  }
+  return (
+    <button
+      type="button"
+      className="find-product-btn"
+      onClick={() => setRevealed(true)}
+    >
+      <ShoppingBag size={13} />
+      Find this product
+    </button>
+  )
+}
+
 // ── CommentNode ───────────────────────────────────────────────────────────────
 
 interface CommentNodeProps {
@@ -431,12 +539,26 @@ function CommentNode({
                   .replace('AI_SUMMARY:', '')
                   .split('•')
                   .filter(Boolean)
-                  .map((point, i) => <li key={i}>{point.trim()}</li>)}
+                  .map((point, i) => (
+                    <li key={i}>{renderAISummaryBullet(point.trim(), products)}</li>
+                  ))}
               </ul>
             </div>
-          ) : (
-            <p>{renderCommentBody(comment.body, products, brands)}</p>
-          )}
+          ) : (() => {
+            const untagged = detectUntaggedProducts(comment.body)
+            return (
+              <>
+                <p>{renderCommentBody(comment.body, products, brands)}</p>
+                {untagged.length > 0 && (
+                  <div className="untagged-products">
+                    {untagged.map((u) => (
+                      <FindProductButton key={u.productId} productId={u.productId} productName={u.productName} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )
+          })()}
 
           <div className="thread-actions">
             <button

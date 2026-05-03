@@ -562,6 +562,24 @@ export const mockPosts: Post[] = [
 
 export const mockComments: Comment[] = [
   {
+    id: 'ai-summary-expert-001',
+    postId: 'post-expert-001',
+    authorId: 'user-expert-simran',
+    body: 'AI_SUMMARY: • Simran uses @Kay Beauty Hydrating Concealer as the hero under-eye product — the Mango butter and Marula oil prevent settling into fine lines • Hyaluronic acid as a base layer is the key tip — it keeps skin plump so makeup sits on top, not in pores • Minimal powder is the secret to an 8-hour dewy look in AC-heavy offices — set only the T-zone and leave the rest bare',
+    upvotes: 143,
+    createdAt: '2026-04-30T08:05:00.000Z',
+    parentId: null,
+  },
+  {
+    id: 'comment-expert-untagged-001',
+    postId: 'post-expert-001',
+    authorId: 'user-tiara-naina',
+    body: 'I tried this routine with the kay beauty concealer and it held up for 7 hours including a lunch meeting. The tip about hyaluronic acid underneath is genuinely a game changer. Also been using the dot and key watermelon sunscreen under the base and it keeps everything looking fresh.',
+    upvotes: 29,
+    createdAt: '2026-04-30T10:00:00.000Z',
+    parentId: null,
+  },
+  {
     id: 'comment-expert-001',
     postId: 'post-expert-001',
     authorId: 'user-tiara-aanya',
@@ -643,12 +661,30 @@ export const mockComments: Comment[] = [
     parentId: 'comment-ama-001',
   },
   {
+    id: 'ai-summary-dc-001',
+    postId: 'post-dc-001',
+    authorId: 'user-tiara-naina',
+    body: 'AI_SUMMARY: • Most community members suggest differentiating between vascular (blue-purple) and melanin-driven (brown) dark circles — melanin type is most common in South Asian skin • For melanin-driven circles, @Pilgrim 10% Vitamin C Under Eye Brightening Serum is the most recommended active — the kojic acid and Vitamin C combo specifically targets pigmentation • Caffeine products help more with puffiness than pigmentation — results for dark circles take 8-12 weeks with consistent use',
+    upvotes: 89,
+    createdAt: '2026-04-27T09:00:00.000Z',
+    parentId: null,
+  },
+  {
     id: 'comment-dc-001',
     postId: 'post-dc-001',
     authorId: demoUserId,
     body: 'Retinol specifically at night helped me more than any caffeine product. But it takes eight to twelve weeks of consistent use. The Ordinary 0.2% is a gentle start if you have not tried it yet.',
     upvotes: 64,
     createdAt: '2026-04-27T09:05:00.000Z',
+    parentId: null,
+  },
+  {
+    id: 'comment-dc-untagged-001',
+    postId: 'post-dc-001',
+    authorId: 'user-tiara-rhea',
+    body: 'The Pilgrim Vitamin C Under Eye Serum genuinely helped my melanin circles. Used it every night for 6 weeks and the difference was noticeable. The dot and key watermelon sunscreen in the morning also helps because protecting the skin stops the marks getting worse.',
+    upvotes: 35,
+    createdAt: '2026-04-27T10:30:00.000Z',
     parentId: null,
   },
   {

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import type { KeyboardEvent, FormEvent } from 'react'
 import { demoUserId } from '../../data/mockData'
-import { useCreatePost, useMentionSearch, usePost, useUpdatePost } from '../../hooks/useTiaraData'
+import { useCreatePost, useCurrentUser, useMentionSearch, usePost, useUpdatePost } from '../../hooks/useTiaraData'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -448,6 +448,7 @@ export function CreatePostForm({
   onCancel,
 }: CreatePostFormProps) {
   const { data: existingPost } = usePost(editPostId ?? '')
+  const { data: currentUser } = useCurrentUser()
   const createPost = useCreatePost()
   const updatePostMutation = useUpdatePost()
   const isEditMode = !!editPostId
@@ -581,7 +582,7 @@ export function CreatePostForm({
               <MediaUpload onProductsDetected={handleProductsDetected} />
             </div>
             <div className="field">
-              <span>Caption</span>
+              <span>Description</span>
               <SmartTextarea
                 value={description}
                 onChange={setDescription}
@@ -593,16 +594,40 @@ export function CreatePostForm({
         )}
 
         {mode === 'link' && !isEditMode && (
-          <label className="field">
-            <span>URL</span>
-            <input
-              type="url"
-              value={link}
-              onChange={(e) => setLink(e.target.value)}
-              placeholder="https://…"
-              required
-            />
-          </label>
+          <>
+            <label className="field">
+              <span>URL</span>
+              <input
+                type="url"
+                value={link}
+                onChange={(e) => setLink(e.target.value)}
+                placeholder="https://…"
+                required
+              />
+            </label>
+            <div className="field">
+              <div className="field-label-row">
+                <span>Description</span>
+                <button
+                  type="button"
+                  className="skin-profile-btn"
+                  onClick={() => {
+                    if (!currentUser) return
+                    const profile = `Skin type: ${currentUser.skinType} | Skin tone: ${currentUser.skinTone} | Concerns: ${currentUser.skinConcerns.join(', ')}\n\n`
+                    setDescription((prev) => profile + prev)
+                  }}
+                >
+                  + Add skin profile
+                </button>
+              </div>
+              <SmartTextarea
+                value={description}
+                onChange={setDescription}
+                placeholder="What's interesting about this link? Share your take."
+                rows={4}
+              />
+            </div>
+          </>
         )}
 
         {mode === 'poll' && !isEditMode && (

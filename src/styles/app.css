@@ -4843,6 +4843,90 @@
   background: rgba(226, 239, 232, 0.95);
 }
 
+/* ── Find this product button ── */
+
+.untagged-products {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.find-product-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 79, 70, 0.25);
+  background: rgba(226, 239, 232, 0.5);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  font: inherit;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.find-product-btn:hover {
+  background: rgba(226, 239, 232, 0.9);
+  border-color: var(--accent);
+}
+
+.find-product-revealed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(15, 79, 70, 0.1);
+  border: 1.5px solid rgba(15, 79, 70, 0.2);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms ease;
+}
+
+.find-product-revealed:hover {
+  background: rgba(15, 79, 70, 0.16);
+}
+
+/* ── Create post: field label row + skin profile button ── */
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.field-label-row span {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.skin-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(15, 79, 70, 0.2);
+  background: rgba(226, 239, 232, 0.6);
+  color: var(--accent);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  font: inherit;
+  transition: background 150ms ease;
+}
+
+.skin-profile-btn:hover {
+  background: rgba(226, 239, 232, 0.95);
+}
+
 /* ── Expert blue tick ── */
 
 .expert-blue-tick {
