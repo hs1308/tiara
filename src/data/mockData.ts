@@ -565,7 +565,7 @@ export const mockComments: Comment[] = [
     id: 'ai-summary-expert-001',
     postId: 'post-expert-001',
     authorId: 'user-expert-simran',
-    body: 'AI_SUMMARY: • Simran uses @Kay Beauty Hydrating Concealer as the hero under-eye product — the Mango butter and Marula oil prevent settling into fine lines • Hyaluronic acid as a base layer is the key tip — it keeps skin plump so makeup sits on top, not in pores • Minimal powder is the secret to an 8-hour dewy look in AC-heavy offices — set only the T-zone and leave the rest bare',
+    body: 'AI_SUMMARY: • Simran uses @Hydrating Concealer as the hero under-eye product — the Mango butter and Marula oil prevent settling into fine lines • Hyaluronic acid as a base layer is the key tip — it keeps skin plump so makeup sits on top, not in pores • Minimal powder is the secret to an 8-hour dewy look in AC-heavy offices — set only the T-zone and leave the rest bare',
     upvotes: 143,
     createdAt: '2026-04-30T08:05:00.000Z',
     parentId: null,

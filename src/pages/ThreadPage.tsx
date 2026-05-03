@@ -363,14 +363,18 @@ function renderAISummaryBullet(text: string, products: Product[]): ReactNode[] {
 
 // ── FindProductButton ────────────────────────────────────────────────────────────────────
 
-function FindProductButton({ productId, productName }: { productId: string; productName: string }) {
+function FindProductButton({ products }: { products: Array<{ productId: string; productName: string }> }) {
   const [revealed, setRevealed] = useState(false)
   if (revealed) {
     return (
-      <Link to={`/product/${productId}`} className="find-product-revealed">
-        <ShoppingBag size={13} />
-        {productName}
-      </Link>
+      <div className="find-product-links">
+        {products.map((u) => (
+          <Link key={u.productId} to={`/product/${u.productId}`} className="find-product-revealed">
+            <ShoppingBag size={13} />
+            {u.productName}
+          </Link>
+        ))}
+      </div>
     )
   }
   return (
@@ -538,7 +542,7 @@ function CommentNode({
                 {comment.body
                   .replace('AI_SUMMARY:', '')
                   .split('•')
-                  .filter(Boolean)
+                  .filter((s) => s.trim().length > 0)
                   .map((point, i) => (
                     <li key={i}>{renderAISummaryBullet(point.trim(), products)}</li>
                   ))}
@@ -551,9 +555,7 @@ function CommentNode({
                 <p>{renderCommentBody(comment.body, products, brands)}</p>
                 {untagged.length > 0 && (
                   <div className="untagged-products">
-                    {untagged.map((u) => (
-                      <FindProductButton key={u.productId} productId={u.productId} productName={u.productName} />
-                    ))}
+                    <FindProductButton products={untagged} />
                   </div>
                 )}
               </>
@@ -739,7 +741,19 @@ export function ThreadPage() {
               <img src={author?.avatar} alt={author?.name} className="avatar-sm" />
             </Link>
             <div>
-              <Link to={`/user/${author?.id}`} className="author-name">{author?.name}</Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <Link to={`/user/${author?.id}`} className="author-name">{author?.name}</Link>
+                {(author as any)?.isExpert && (
+                  <>
+                    <span className="expert-blue-tick" title="Verified Expert">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="#3b82f6">
+                        <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="none" />
+                      </svg>
+                    </span>
+                    <span className="expert-title-tag">{(author as any).expertTitle}</span>
+                  </>
+                )}
+              </div>
               <div className="meta-line">
                 {formatDate(post.createdAt)}
               </div>

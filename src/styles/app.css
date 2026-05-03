@@ -551,11 +551,24 @@
 .wallet-hero h1,
 .success-panel h1,
 .profile-hero h1 {
-  font-size: clamp(1.4rem, 2vw, 2rem);
+  font-size: clamp(1.25rem, 1.85vw, 1.85rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--ink);
   margin: 0;
+}
+
+.thread-hero .thread-title {
+  margin-top: 12px;
+}
+
+.thread-hero .thread-copy {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.thread-hero .tag-row {
+  margin-top: 10px;
 }
 
 .thread-image,
@@ -4871,6 +4884,13 @@
 .find-product-btn:hover {
   background: rgba(226, 239, 232, 0.9);
   border-color: var(--accent);
+}
+
+.find-product-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 .find-product-revealed {

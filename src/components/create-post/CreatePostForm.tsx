@@ -565,7 +565,22 @@ export function CreatePostForm({
         {/* Mode-specific content */}
         {(mode === 'text' || isEditMode) && (
           <div className="field">
-            <span>Description</span>
+            <div className="field-label-row">
+              <span>Description</span>
+              {!isEditMode && (
+                <button
+                  type="button"
+                  className="skin-profile-btn"
+                  onClick={() => {
+                    if (!currentUser) return
+                    const profile = `Skin type: ${currentUser.skinType} | Skin tone: ${currentUser.skinTone} | Concerns: ${currentUser.skinConcerns.join(', ')}\n\n`
+                    setDescription((prev) => profile + prev)
+                  }}
+                >
+                  + Add skin profile
+                </button>
+              )}
+            </div>
             <SmartTextarea
               value={description}
               onChange={setDescription}
@@ -582,7 +597,20 @@ export function CreatePostForm({
               <MediaUpload onProductsDetected={handleProductsDetected} />
             </div>
             <div className="field">
-              <span>Description</span>
+              <div className="field-label-row">
+                <span>Description</span>
+                <button
+                  type="button"
+                  className="skin-profile-btn"
+                  onClick={() => {
+                    if (!currentUser) return
+                    const profile = `Skin type: ${currentUser.skinType} | Skin tone: ${currentUser.skinTone} | Concerns: ${currentUser.skinConcerns.join(', ')}\n\n`
+                    setDescription((prev) => profile + prev)
+                  }}
+                >
+                  + Add skin profile
+                </button>
+              </div>
               <SmartTextarea
                 value={description}
                 onChange={setDescription}
