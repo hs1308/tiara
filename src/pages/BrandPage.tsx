@@ -204,7 +204,20 @@ export function BrandPage() {
         {/* Tab content */}
         <div className="pdp-tab-content">
           {activeTab === 'posts' && (
-            <div className="feed-stack">
+            <>
+              <button
+                type="button"
+                className="pdp-create-prompt"
+                onClick={() =>
+                  navigate(`/create?type=Product%20Talk&brand=${encodeURIComponent(resolvedBrandName)}`, {
+                    state: { backgroundLocation: location },
+                  })
+                }
+              >
+                <MessageCircle size={16} />
+                Share your experience with {resolvedBrandName} products...
+              </button>
+              <div className="feed-stack">
               {brandPosts.map((post) => (
                 <PostCard
                   key={post.id}
@@ -218,6 +231,7 @@ export function BrandPage() {
                 <p className="empty-label">No community posts yet — be the first to start a conversation.</p>
               )}
             </div>
+            </>
           )}
 
           {activeTab === 'comments' && (
