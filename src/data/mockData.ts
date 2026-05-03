@@ -57,6 +57,25 @@ export const mockUsers: UserProfile[] = [
     interests: ['Haircare', 'Skincare'],
     bio: 'Ingredient labels first, impulse purchases later.',
   },
+  {
+    id: 'user-expert-simran',
+    name: 'Simran Kaur',
+    username: 'simranmua',
+    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    city: 'Mumbai',
+    karma: 4820,
+    walletBalance: 0,
+    badges: ['Verified Expert', 'Makeup Artist', 'Community Favourite'],
+    skinType: 'Combination',
+    skinTone: 'Medium-Wheatish',
+    skinConcerns: ['Open pores', 'Oiliness'],
+    hairType: 'Straight',
+    hairConcerns: [],
+    interests: ['Makeup', 'Skincare', 'Lip care'],
+    bio: 'Freelance MUA with 6 years of experience. Worked on 300+ brides and editorial shoots across India. I share what actually works on Indian skin tones — no filter, no brand deals.',
+    isExpert: true,
+    expertTitle: 'Certified Makeup Artist',
+  },
 ]
 
 export const mockProducts: Product[] = [
@@ -304,6 +323,20 @@ export const mockProducts: Product[] = [
 
 export const mockPosts: Post[] = [
   {
+    id: 'post-expert-001',
+    authorId: 'user-expert-simran',
+    productId: 'product-kay-beauty-concealer',
+    brand: 'Kay Beauty',
+    type: 'Look & Feel',
+    title: 'My full dewy office makeup routine for Indian skin — products, ingredients, and what I actually use every day',
+    description: 'This is the exact routine I use when I have a client at 8 AM and need to look put-together without cake face. I rely on @Kay Beauty Hydrating Concealer for under-eyes — the @Mango butter and @Marula oil in it mean it never settles into fine lines. For base I use a skin tint mixed with a drop of @Squalane to keep it dewy through AC-heavy offices. Setting with minimal powder — only the T-zone. The real secret is the @Hyaluronic acid layer underneath everything. Keeps skin plump so makeup sits on skin not in it.',
+    image: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=900&q=80',
+    tags: ['Makeup routine', 'Dewy skin', 'Office makeup', 'Indian skin tone', 'Expert', 'Concealer', 'Skin tint'],
+    upvotes: 548,
+    commentCount: 42,
+    createdAt: '2026-04-30T08:00:00.000Z',
+  },
+  {
     id: 'post-ama-001',
     authorId: 'user-tiara-naina',
     productId: null,
@@ -528,6 +561,33 @@ export const mockPosts: Post[] = [
 ]
 
 export const mockComments: Comment[] = [
+  {
+    id: 'comment-expert-001',
+    postId: 'post-expert-001',
+    authorId: 'user-tiara-aanya',
+    body: 'The @Hyaluronic acid underneath tip is something I never thought to do but it makes so much sense. Going to try this tomorrow morning!',
+    upvotes: 87,
+    createdAt: '2026-04-30T08:30:00.000Z',
+    parentId: null,
+  },
+  {
+    id: 'comment-expert-002',
+    postId: 'post-expert-001',
+    authorId: 'user-tiara-rhea',
+    body: 'Can you share which skin tint you use? And does the @Squalane mixing trick work for oily skin too or does it make you look too dewy by noon?',
+    upvotes: 63,
+    createdAt: '2026-04-30T09:00:00.000Z',
+    parentId: null,
+  },
+  {
+    id: 'comment-expert-003',
+    postId: 'post-expert-001',
+    authorId: 'user-expert-simran',
+    body: 'For oily skin I would use just half a drop of @Squalane and skip it on the T-zone. The key is applying setting powder ONLY where you need it — if you powder everywhere it kills the dewy effect. Try the @Kay Beauty Hydrating Concealer on its own first without powder and see how long it holds before you decide how much to set.',
+    upvotes: 112,
+    createdAt: '2026-04-30T09:15:00.000Z',
+    parentId: 'comment-expert-002',
+  },
   {
     id: 'comment-followed-001',
     postId: 'post-followed-001',

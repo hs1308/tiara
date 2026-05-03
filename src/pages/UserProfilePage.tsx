@@ -37,7 +37,19 @@ export function UserProfilePage() {
         <img src={user.avatar} alt={user.name} className="profile-avatar" />
         <div style={{ flex: 1 }}>
           <span className="section-kicker">@{user.username}</span>
-          <h1>{user.name}</h1>
+          <h1 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {user.name}
+            {user.isExpert && (
+              <span className="expert-blue-tick" title="Verified Expert">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#3b82f6">
+                  <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="none" />
+                </svg>
+              </span>
+            )}
+          </h1>
+          {user.isExpert && user.expertTitle && (
+            <span className="expert-title-tag" style={{ alignSelf: 'flex-start' }}>{user.expertTitle}</span>
+          )}
           <p>{user.bio}</p>
           <div className="profile-stats-row">
             <span><strong>{userPosts.length}</strong> posts</span>

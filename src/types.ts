@@ -32,6 +32,8 @@ export interface UserProfile {
   hairConcerns: string[]
   interests: InterestCategory[]
   bio: string
+  isExpert?: boolean
+  expertTitle?: string
 }
 
 export interface Product {
