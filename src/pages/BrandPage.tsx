@@ -222,7 +222,7 @@ export function BrandPage() {
 
           {activeTab === 'comments' && (
             <div className="pdp-comments-list">
-              {displayedContent.map((item: any, idx) => {
+              {displayedContent.map((item: any) => {
                 const { comment, post, author } = item
                 return (
                   <Link to={`/feed/${post.id}`} key={comment.id} className="pdp-comment-item">
