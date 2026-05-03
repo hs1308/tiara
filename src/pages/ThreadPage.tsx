@@ -789,7 +789,7 @@ export function ThreadPage() {
             </Link>
           ))}
         </div>
-        {post.image ? <img src={post.image} alt={post.title} className="thread-image" /> : null}
+        {post.image ? <img src={post.image} alt={post.title} className="thread-post-image" /> : null}
         {product ? (
           <Link to={`/product/${product.id}`} className="thread-product-banner">
             <img src={product.heroImage} alt={product.name} />

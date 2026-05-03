@@ -32,6 +32,8 @@ function AppShellInner() {
   const hasMessages = conversations.length > 0
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  const [searchExpanded, setSearchExpanded] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
   const mainRef = useRef<HTMLElement>(null)
 
   // Scroll to top on every route change
@@ -89,9 +91,37 @@ function AppShellInner() {
           </button>
 
           <div className="topbar-actions">
-            <button className="icon-button" type="button" aria-label="Search">
-              <Search size={18} />
-            </button>
+            {searchExpanded ? (
+              <div className="search-expanded">
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search feed, products, brands, ingredients or more"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onBlur={() => !searchQuery && setSearchExpanded(false)}
+                  autoFocus
+                />
+                <button
+                  className="icon-button"
+                  type="button"
+                  onClick={() => { setSearchExpanded(false); setSearchQuery('') }}
+                  aria-label="Close search"
+                  style={{ width: '32px', height: '32px' }}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <button
+                className="icon-button"
+                type="button"
+                aria-label="Search"
+                onClick={() => setSearchExpanded(true)}
+              >
+                <Search size={18} />
+              </button>
+            )}
 
             <button
               className="icon-button inbox-icon-button"
