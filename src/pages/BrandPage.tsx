@@ -165,6 +165,13 @@ export function BrandPage() {
       </section>
 
       <section className="section-block">
+        <div className="section-head">
+          <div>
+            <span className="section-kicker">What the community is saying</span>
+          </div>
+        </div>
+
+        {/* Sentiment stats */}
         <div className="snapshot-panel">
           <div className="snapshot-stat">
             <div className="discover-product-sentiment">

@@ -1,4 +1,4 @@
-import { Menu, MessageCircle, Search, ShoppingCart, Wallet, X, Package, MapPin, CreditCard, HelpCircle, Settings, LogOut } from 'lucide-react'
+import { Menu, MessageCircle, Search, ShoppingCart, Wallet, X, Package, MapPin, CreditCard, HelpCircle, Settings, LogOut, Bell } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
 import { useCartCount, useCurrentUser } from '../../hooks/useTiaraData'
@@ -31,6 +31,7 @@ function AppShellInner() {
   const { conversations } = useMessaging()
   const hasMessages = conversations.length > 0
   const [menuOpen, setMenuOpen] = useState(false)
+  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
 
   // Scroll to top on every route change
@@ -41,6 +42,16 @@ function AppShellInner() {
     window.scrollTo({ top: 0, behavior: 'instant' })
     setMenuOpen(false)
   }, [location.pathname, location.search])
+
+  // Mock notifications
+  const notifications = [
+    { id: 'n1', type: 'comment', text: 'Rhea Kapoor commented on your post "My full dewy office makeup routine"', time: '2 hours ago', read: false },
+    { id: 'n2', type: 'follow', text: 'New post about Dot & Key Watermelon Sunscreen', time: '5 hours ago', read: false },
+    { id: 'n3', type: 'like', text: 'Naina Rao liked your comment', time: '1 day ago', read: true },
+    { id: 'n4', type: 'reply', text: 'Simran Kaur replied to your comment on "Dark circles getting worse"', time: '2 days ago', read: true },
+  ]
+
+  const unreadCount = notifications.filter(n => !n.read).length
 
   const titleMap: Record<string, string> = {
     '/':        'Tiara',
@@ -80,6 +91,16 @@ function AppShellInner() {
           <div className="topbar-actions">
             <button className="icon-button" type="button" aria-label="Search">
               <Search size={18} />
+            </button>
+
+            <button
+              className="icon-button inbox-icon-button"
+              type="button"
+              aria-label="Notifications"
+              onClick={() => setNotificationsOpen(true)}
+            >
+              <Bell size={18} />
+              {unreadCount > 0 && <span className="inbox-dot" />}
             </button>
 
             <button
@@ -165,6 +186,43 @@ function AppShellInner() {
                   <span>Log out</span>
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Notifications drawer */}
+        {notificationsOpen && (
+          <div className="drawer-overlay" onClick={() => setNotificationsOpen(false)}>
+            <div className="drawer" onClick={(e) => e.stopPropagation()}>
+              <div className="drawer-header">
+                <h3 className="inbox-title">Notifications</h3>
+                <button
+                  className="icon-button"
+                  type="button"
+                  onClick={() => setNotificationsOpen(false)}
+                  aria-label="Close notifications"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <nav className="drawer-nav">
+                {notifications.map((notif) => (
+                  <button
+                    key={notif.id}
+                    type="button"
+                    className="notif-item"
+                    onClick={() => setNotificationsOpen(false)}
+                    style={{ opacity: notif.read ? 0.7 : 1 }}
+                  >
+                    <div className="notif-content">
+                      <p className="notif-text">{notif.text}</p>
+                      <span className="notif-time">{notif.time}</span>
+                    </div>
+                    {!notif.read && <div className="notif-unread-dot" />}
+                  </button>
+                ))}
+              </nav>
             </div>
           </div>
         )}

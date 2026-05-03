@@ -183,7 +183,6 @@ export function ProductPage() {
         <div className="section-head">
           <div>
             <span className="section-kicker">What the community is saying</span>
-            <h2>Social proof, context, and the nuanced bits that star ratings miss</h2>
           </div>
           <Link to={`/feed?product=${product.id}`} className="inline-link">
             See all <ArrowRight size={15} />
