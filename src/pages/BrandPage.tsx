@@ -174,13 +174,8 @@ export function BrandPage() {
         {/* Sentiment stats */}
         <div className="snapshot-panel">
           <div className="snapshot-stat">
-            <div className="discover-product-sentiment">
-              <div className="discover-sentiment-bar-track">
-                <div className="discover-sentiment-bar-fill" style={{ width: `${sentimentPct}%`, background: sentimentColor }} />
-              </div>
-              <span className="discover-sentiment-label" style={{ color: sentimentColor }}>{sentimentPct}% positive</span>
-            </div>
-            <span>Sentiment score</span>
+            <strong style={{ color: sentimentColor }}>{sentimentPct}%</strong>
+            <span>Positive sentiment</span>
           </div>
           <div className="snapshot-stat">
             <strong>{totalDiscussions}</strong>
@@ -278,7 +273,7 @@ export function BrandPage() {
             <h2>All {resolvedBrandName} products on Tiara</h2>
           </div>
         </div>
-        <div className="discover-product-grid">
+        <div className="brand-product-grid">
           {brandProducts.map((product) => {
             const pct = sentimentFromScore(product.communityScore, product.id)
             const colour = sentimentColour(pct)

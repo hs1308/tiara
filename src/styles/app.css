@@ -3665,6 +3665,44 @@
 
 /* ── Notification items ── */
 
+.notif-dropdown {
+  position: absolute;
+  top: 70px;
+  right: 200px;
+  z-index: 200;
+  width: 360px;
+  max-height: 500px;
+  background: var(--surface);
+  border: 1px solid rgba(23, 50, 44, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.notif-dropdown-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(23, 50, 44, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.notif-dropdown-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0;
+}
+
+.notif-dropdown-list {
+  overflow-y: auto;
+  max-height: 440px;
+  padding: 6px;
+}
+
 .notif-item {
   display: flex;
   align-items: flex-start;
@@ -3674,16 +3712,20 @@
   padding: 13px 14px;
   border: 0;
   background: transparent;
-  border-radius: 16px;
+  border-radius: 14px;
   text-align: left;
   cursor: pointer;
   transition: background 140ms ease;
   font: inherit;
-  border-bottom: 1px solid rgba(23, 50, 44, 0.05);
 }
 
 .notif-item:hover {
   background: rgba(23, 50, 44, 0.06);
+}
+
+.notif-item:not(:last-child) {
+  border-bottom: 1px solid rgba(23, 50, 44, 0.05);
+  border-radius: 0;
 }
 
 .notif-content {
@@ -3694,14 +3736,14 @@
 }
 
 .notif-text {
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: var(--ink);
   line-height: 1.4;
   margin: 0;
 }
 
 .notif-time {
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--muted);
 }
 
@@ -3711,7 +3753,16 @@
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
-  margin-top: 4px;
+  margin-top: 6px;
+}
+
+@media (max-width: 759px) {
+  .notif-dropdown {
+    top: 65px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
 }
 
 /* ── Create post: mode tabs ── */
@@ -4279,6 +4330,25 @@
 @media (max-width: 759px) {
   .discover-product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Brand page product grid - fixed 4 column layout */
+.brand-product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+@media (min-width: 760px) {
+  .brand-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .brand-product-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 

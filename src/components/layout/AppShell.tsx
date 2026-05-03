@@ -190,23 +190,25 @@ function AppShellInner() {
           </div>
         )}
 
-        {/* Notifications drawer */}
+        {/* Notifications dropdown */}
         {notificationsOpen && (
-          <div className="drawer-overlay" onClick={() => setNotificationsOpen(false)}>
-            <div className="drawer" onClick={(e) => e.stopPropagation()}>
-              <div className="drawer-header">
-                <h3 className="inbox-title">Notifications</h3>
+          <>
+            <div className="drawer-overlay" onClick={() => setNotificationsOpen(false)} style={{ background: 'transparent' }} />
+            <div className="notif-dropdown">
+              <div className="notif-dropdown-header">
+                <h3 className="notif-dropdown-title">Notifications</h3>
                 <button
                   className="icon-button"
                   type="button"
                   onClick={() => setNotificationsOpen(false)}
                   aria-label="Close notifications"
+                  style={{ width: '28px', height: '28px' }}
                 >
-                  <X size={18} />
+                  <X size={16} />
                 </button>
               </div>
 
-              <nav className="drawer-nav">
+              <div className="notif-dropdown-list">
                 {notifications.map((notif) => (
                   <button
                     key={notif.id}
@@ -222,9 +224,9 @@ function AppShellInner() {
                     {!notif.read && <div className="notif-unread-dot" />}
                   </button>
                 ))}
-              </nav>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
