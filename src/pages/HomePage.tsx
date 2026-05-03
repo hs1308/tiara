@@ -152,6 +152,9 @@ export function HomePage() {
             </div>
             <Link to={`/feed?problem=${encodeURIComponent(CONTEXTUAL_TOPIC)}`} className="inline-link">See all discussions</Link>
           </div>
+          <div className="recent-search-threads-label">
+            <span className="section-kicker">Threads discussing {CONTEXTUAL_TOPIC}</span>
+          </div>
           <div className="recent-search-posts">
             {contextualPosts.map((post) => {
               const author = users.find((u) => u.id === post.authorId)
@@ -172,12 +175,13 @@ export function HomePage() {
               )
             })}
           </div>
-          <div className="contextual-divider"><span>Recommended for {CONTEXTUAL_TOPIC}</span></div>
+          <div className="contextual-divider"><span>Products recommended for {CONTEXTUAL_TOPIC}</span></div>
           <div className="contextual-products-list">
             {communityProducts.map((product) => {
               const match = getBestPostForProduct(product.id, posts, allComments)
               const threadPost = match?.type === 'post' ? match.item : match?.type === 'comment' ? match.post : null
               const snippet = match?.type === 'post' ? match.item.title : match?.type === 'comment' ? match.item.body : null
+              const postDescription = match?.type === 'post' ? match.item.description : null
               const snippetAuthor = match?.type === 'post' ? users.find((u) => u.id === match.item.authorId) : match?.type === 'comment' ? users.find((u) => u.id === match.item.authorId) : null
               const upvotes = match?.type === 'post' ? match.item.upvotes : match?.type === 'comment' ? match.item.upvotes : 0
               return (
@@ -197,6 +201,7 @@ export function HomePage() {
                     {threadPost && snippet ? (
                       <Link to={`/feed/${threadPost.id}`} className="community-thread-cell">
                         <p className="community-thread-snippet">&ldquo;{snippet.length > 100 ? snippet.slice(0, 100) + '\u2026' : snippet}&rdquo;</p>
+                        {postDescription && <p className="community-thread-description">{postDescription.length > 80 ? postDescription.slice(0, 80) + '\u2026' : postDescription}</p>}
                         <div className="community-thread-meta">
                           {snippetAuthor && <img src={snippetAuthor.avatar} alt={snippetAuthor.name} className="avatar-xs" />}
                           <span>{snippetAuthor?.name}</span>
@@ -426,7 +431,7 @@ export function HomePage() {
           <section className="section-block followed-post-card">
             <div className="followed-post-eyebrow">
               <img src={fpAuthor?.avatar} alt={fpAuthor?.name} className="avatar-xs" />
-              <span><strong>{fpAuthor?.name}</strong> posted about <strong>{fpProduct?.name ?? fp.brand}</strong></span>
+              <span><strong>{fpAuthor?.name}</strong> posted about <Link to={`/product/${fpProduct?.id}`} style={{ textDecoration: 'underline' }}><strong>{fpProduct?.name ?? fp.brand}</strong></Link></span>
             </div>
             <Link to={`/feed/${fp.id}`} className="followed-post-main">
               <strong className="followed-post-title">{fp.title}</strong>
