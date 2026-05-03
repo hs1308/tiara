@@ -5721,3 +5721,64 @@
 .ai-summary-list li {
   line-height: 1.5;
 }
+
+/* ── Homepage: Recent search threads label ── */
+
+.recent-search-threads-label {
+  margin-bottom: 0;
+}
+
+/* ── Homepage: Community thread description ── */
+
+.community-thread-description {
+  font-size: 0.84rem;
+  color: var(--muted);
+  line-height: 1.3;
+  margin: 6px 0 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Homepage: Followed post image ── */
+
+.followed-post-image {
+  width: 100%;
+  max-width: 480px;
+  height: auto;
+  max-height: 320px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-top: 12px;
+  display: block;
+}
+
+/* ── Thread page post image ── */
+
+.thread-post-image {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  max-height: 360px;
+  object-fit: cover;
+  border-radius: 16px;
+  margin-top: 14px;
+  display: block;
+}
+
+/* ── Expert spotlight image ── */
+
+.expert-post-image-wrap {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  max-height: 320px;
+}
+
+.expert-post-image {
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: cover;
+  display: block;
+}

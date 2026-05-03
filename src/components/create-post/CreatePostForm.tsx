@@ -15,6 +15,8 @@ interface PollOption {
 interface CreatePostFormProps {
   productId?: string | null
   editPostId?: string | null
+  initialTags?: string[]
+  initialDescription?: string
   modal?: boolean
   onSuccess?: (postId: string) => void
   onCancel?: () => void
@@ -443,6 +445,8 @@ function TagsSection({ tags, onChange }: { tags: string[]; onChange: (t: string[
 export function CreatePostForm({
   productId,
   editPostId,
+  initialTags,
+  initialDescription,
   modal,
   onSuccess,
   onCancel,
@@ -456,8 +460,8 @@ export function CreatePostForm({
 
   const [mode, setMode] = useState<PostMode>('text')
   const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [tags, setTags] = useState<string[]>([])
+  const [description, setDescription] = useState(initialDescription ?? '')
+  const [tags, setTags] = useState<string[]>(initialTags ?? [])
   const [link, setLink] = useState('')
   const [pollOptions, setPollOptions] = useState<PollOption[]>([
     { id: '1', text: '' },

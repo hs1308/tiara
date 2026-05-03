@@ -153,7 +153,7 @@ export function HomePage() {
             <Link to={`/feed?problem=${encodeURIComponent(CONTEXTUAL_TOPIC)}`} className="inline-link">See all discussions</Link>
           </div>
           <div className="recent-search-threads-label">
-            <span className="section-kicker">Threads discussing {CONTEXTUAL_TOPIC}</span>
+            <div className="contextual-divider"><span>Threads discussing {CONTEXTUAL_TOPIC}</span></div>
           </div>
           <div className="recent-search-posts">
             {contextualPosts.map((post) => {
@@ -216,7 +216,10 @@ export function HomePage() {
                     )}
                   </div>
                   <div className="contextual-product-ask">
-                    <Link to={`/create?productId=${product.id}`} className="contextual-ask-btn">
+                    <Link
+                      to={`/create?productId=${product.id}&desc=${encodeURIComponent(`@${product.name} `)}`}
+                      className="contextual-ask-btn"
+                    >
                       <MessageCircle size={14} />Ask a question
                     </Link>
                   </div>
@@ -377,7 +380,7 @@ export function HomePage() {
                   </div>
                   <div className="topic-card-actions">
                     <Link to={`/feed?care=${encodeURIComponent(cat)}`} className="topic-action-btn topic-see-more" style={{ borderColor: colour.border, color: colour.label }}>See more</Link>
-                    <Link to="/create?type=Rec%20Request" className="topic-action-btn topic-ask" style={{ background: colour.border, color: colour.label }}>Ask a question</Link>
+                    <Link to={`/create?type=Rec%20Request&tag=${encodeURIComponent(cat)}`} className="topic-action-btn topic-ask" style={{ background: colour.border, color: colour.label }}>Ask a question</Link>
                   </div>
                 </div>
               ))}
