@@ -510,6 +510,7 @@
   justify-content: center;
   min-height: 2rem;
   padding: 0 12px;
+  border-radius: 999px;
   background: rgba(226, 239, 232, 0.86);
   color: var(--accent);
   font-size: 0.85rem;
@@ -3721,9 +3722,51 @@
   padding: 8px 14px 4px;
 }
 
-.mention-badge-ingredient {
-  background: rgba(196, 141, 58, 0.15);
+.mention-link--product {
+  color: #1c6b5a;
+  background: rgba(28, 107, 90, 0.08);
+  border-radius: 4px;
+  padding: 0 3px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 120ms ease;
+}
+
+.mention-link--product:hover {
+  background: rgba(28, 107, 90, 0.15);
+}
+
+.mention-link--brand {
   color: #7a5820;
+  background: rgba(196, 141, 58, 0.1);
+  border-radius: 4px;
+  padding: 0 3px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 120ms ease;
+}
+
+.mention-link--brand:hover {
+  background: rgba(196, 141, 58, 0.18);
+}
+
+.mention-link--ingredient {
+  color: #5a3d8a;
+  background: rgba(90, 61, 138, 0.08);
+  border-radius: 4px;
+  padding: 0 3px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: background 120ms ease;
+}
+
+.mention-link--ingredient:hover {
+  background: rgba(90, 61, 138, 0.15);
+}
+
+.mention-badge-ingredient {
+  background: rgba(90, 61, 138, 0.12);
+  color: #5a3d8a;
 }
 
 /* ── Create post: media upload ── */

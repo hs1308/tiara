@@ -64,10 +64,24 @@ function buildCommentTree(comments: Comment[]) {
 
 // ── Mention link renderer ─────────────────────────────────────────────────────
 
+// Ingredients known to the system — @mention links to Discover filtered by ingredient
+const KNOWN_INGREDIENTS = [
+  'Niacinamide', 'Vitamin C', 'Retinol', 'Hyaluronic acid', 'Salicylic acid',
+  'Glycerin', 'Ceramides', 'Peptides', 'AHA', 'BHA', 'Zinc oxide',
+  'Titanium dioxide', 'Aloe vera', 'Tea tree oil', 'Kojic acid',
+  'Tranexamic acid', 'Lactic acid', 'Ferulic acid', 'Squalane', 'Bakuchiol',
+  'Caffeine', 'EGCG', 'Watermelon extract', 'Mango butter', 'Marula oil',
+  'Liquorice extract', 'Zinc PCA', 'Amino acids', 'Quinoa protein',
+  'Avocado oil', 'Shea butter', 'Vitamin E', 'Green tea extract',
+  'Niacinamide 10%', 'Vitamin C 10%', 'Caffeine 5%', 'Kojic acid',
+  'Alpha arbutin', 'Salted caramel accord', 'Pistachio accord', 'Vanilla',
+  'Emollients',
+]
+
 interface MentionEntity {
   name: string
   to: string
-  type: 'brand' | 'product'
+  type: 'brand' | 'product' | 'ingredient'
 }
 
 function renderCommentBody(body: string, products: Product[], brands: Brand[]): ReactNode[] {
@@ -78,6 +92,11 @@ function renderCommentBody(body: string, products: Product[], brands: Brand[]): 
   ].filter((name, index, list) => list.indexOf(name) === index)
 
   const entities: MentionEntity[] = [
+    ...KNOWN_INGREDIENTS.map((name) => ({
+      name,
+      to: `/shop?ingredient=${encodeURIComponent(name.toLowerCase())}`,
+      type: 'ingredient' as const,
+    })),
     ...brandEntities.map((name) => ({
       name,
       to: `/brand/${brandSlug(name)}`,
@@ -107,7 +126,7 @@ function renderCommentBody(body: string, products: Product[], brands: Brand[]): 
         <Link
           key={key++}
           to={match.to}
-          className={`mention-link${match.type === 'brand' ? ' mention-link-brand' : ''}`}
+          className={`mention-link mention-link--${match.type}`}
         >
           @{match.name}
         </Link>,
@@ -128,7 +147,7 @@ interface MentionResult {
   id: string
   label: string
   sublabel?: string
-  type: 'brand' | 'product'
+  type: 'brand' | 'product' | 'ingredient'
 }
 
 interface ActiveMention {
@@ -150,6 +169,24 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { data: mentionResults = [] } = useMentionSearch(activeMention ? activeMention.query : null)
+
+  // Also surface matching ingredients locally
+  const ingredientResults: MentionResult[] = activeMention
+    ? KNOWN_INGREDIENTS
+        .filter((ing) => ing.toLowerCase().includes(activeMention.query.toLowerCase()))
+        .slice(0, 4)
+        .map((ing) => ({
+          id: `ingredient-${ing}`,
+          label: ing,
+          sublabel: 'ingredient',
+          type: 'ingredient' as const,
+        }))
+    : []
+
+  const allResults: MentionResult[] = [
+    ...ingredientResults,
+    ...(mentionResults as MentionResult[]),
+  ].slice(0, 8)
 
   function detectMention(text: string, cursorPos: number) {
     const before = text.slice(0, cursorPos)
@@ -196,7 +233,7 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
     }, 0)
   }
 
-  const showDropdown = activeMention !== null && mentionResults.length > 0
+  const showDropdown = activeMention !== null && allResults.length > 0
 
   return (
     <div className="mention-wrap">
@@ -213,7 +250,7 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
       />
       {showDropdown && (
         <div className="mention-dropdown" role="listbox">
-          {(mentionResults as MentionResult[]).map((item) => (
+          {allResults.map((item) => (
             <button
               key={`${item.type}-${item.id}`}
               type="button"
@@ -225,7 +262,7 @@ function MentionTextarea({ value, onChange, placeholder, rows = 2, className, au
               }}
             >
               <span className="mention-item-icon">
-                {item.type === 'brand' ? <AtSign size={13} /> : <ShoppingBag size={13} />}
+                {item.type === 'ingredient' ? '🧪' : item.type === 'brand' ? <AtSign size={13} /> : <ShoppingBag size={13} />}
               </span>
               <span className="mention-item-body">
                 <span className="mention-item-label">{item.label}</span>
@@ -608,7 +645,7 @@ export function ThreadPage() {
           )}
         </div>
         <h2 className="thread-title">{post.title}</h2>
-        <p className="thread-copy">{post.description}</p>
+        <p className="thread-copy">{renderCommentBody(post.description, products, brands)}</p>
         <div className="tag-row">
           {post.tags.map((tag) => (
             <Link key={tag} to={`/feed?problem=${encodeURIComponent(tag)}`} className="tag-pill tag-pill-btn">
