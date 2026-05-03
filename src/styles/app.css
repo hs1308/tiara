@@ -4230,9 +4230,15 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 920px) {
   .discover-product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 760px) and (max-width: 919px) {
+  .discover-product-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -4258,6 +4264,9 @@
   overflow: hidden;
   display: block;
   background: rgba(248, 246, 242, 0.7);
+  transform: scale(0.8);
+  transform-origin: center;
+  margin: -10% -10% 0;
 }
 
 .discover-product-image {
